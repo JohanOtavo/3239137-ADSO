@@ -1,0 +1,146 @@
+-- =========================
+-- CREAR BASE DE DATOS
+-- =========================
+CREATE DATABASE ComandasDB;
+USE ComandasDB;
+
+-- =========================
+-- TABLAS
+-- =========================
+CREATE TABLE Clientes (
+    IdCliente INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100),
+    Telefono VARCHAR(20)
+);
+
+CREATE TABLE Mesas (
+    IdMesa INT AUTO_INCREMENT PRIMARY KEY,
+    Numero INT,
+    Capacidad INT
+);
+
+CREATE TABLE Empleados (
+    IdEmpleado INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(100),
+    Rol VARCHAR(50)
+);
+
+CREATE TABLE Pedidos (
+    IdPedido INT AUTO_INCREMENT PRIMARY KEY,
+    IdCliente INT,
+    IdMesa INT,
+    IdEmpleado INT,
+    Fecha DATETIME,
+    FOREIGN KEY (IdCliente) REFERENCES Clientes(IdCliente),
+    FOREIGN KEY (IdMesa) REFERENCES Mesas(IdMesa),
+    FOREIGN KEY (IdEmpleado) REFERENCES Empleados(IdEmpleado)
+);
+
+CREATE TABLE DetallePedido (
+    IdDetalle INT AUTO_INCREMENT PRIMARY KEY,
+    IdPedido INT,
+    Producto VARCHAR(100),
+    Cantidad INT,
+    Precio DECIMAL(10,2),
+    FOREIGN KEY (IdPedido) REFERENCES Pedidos(IdPedido)
+);
+
+-- =========================
+-- INSERTS
+-- =========================
+INSERT INTO Clientes VALUES
+(1,'Juan','123'),
+(2,'Maria','456'),
+(3,'Carlos','789'),
+(4,'Ana','111'),
+(5,'Luis','222');
+
+INSERT INTO Mesas VALUES
+(1,1,4),(2,2,2),(3,3,6),(4,4,4),(5,5,2);
+
+INSERT INTO Empleados VALUES
+(1,'Pedro','Mesero'),
+(2,'Laura','Cajera'),
+(3,'Miguel','Cocinero'),
+(4,'Sofia','Mesero'),
+(5,'Diego','Administrador');
+
+INSERT INTO Pedidos VALUES
+(1,1,1,1,NOW()),
+(2,2,2,2,NOW()),
+(3,3,3,1,NOW()),
+(4,4,4,3,NOW()),
+(5,5,5,2,NOW());
+
+INSERT INTO DetallePedido VALUES
+(1,1,'Pizza',2,20),
+(2,2,'Hamburguesa',1,15),
+(3,3,'Pasta',3,12),
+(4,4,'Ensalada',1,10),
+(5,5,'Sopa',2,8);
+
+-- =========================
+-- UPDATES
+-- =========================
+UPDATE Clientes SET Telefono='999' WHERE IdCliente=1;
+UPDATE Clientes SET Nombre='Maria G' WHERE IdCliente=2;
+
+UPDATE Mesas SET Capacidad=5 WHERE IdMesa=1;
+UPDATE Mesas SET Numero=10 WHERE IdMesa=2;
+
+UPDATE Empleados SET Rol='Supervisor' WHERE IdEmpleado=3;
+UPDATE Empleados SET Nombre='Laura Gomez' WHERE IdEmpleado=2;
+
+UPDATE Pedidos SET IdEmpleado=4 WHERE IdPedido=1;
+UPDATE Pedidos SET IdMesa=3 WHERE IdPedido=2;
+
+UPDATE DetallePedido SET Precio=25 WHERE IdDetalle=1;
+UPDATE DetallePedido SET Cantidad=5 WHERE IdDetalle=3;
+
+-- =========================
+-- DELETES
+-- =========================
+DELETE FROM DetallePedido WHERE IdDetalle=5;
+DELETE FROM DetallePedido WHERE IdDetalle=4;
+
+DELETE FROM Pedidos WHERE IdPedido=5;
+DELETE FROM Pedidos WHERE IdPedido=4;
+
+DELETE FROM Clientes WHERE IdCliente=5;
+DELETE FROM Clientes WHERE IdCliente=4;
+
+DELETE FROM Mesas WHERE IdMesa=5;
+DELETE FROM Mesas WHERE IdMesa=4;
+
+DELETE FROM Empleados WHERE IdEmpleado=5;
+DELETE FROM Empleados WHERE IdEmpleado=4;
+
+-- =========================
+-- SELECTS
+-- =========================
+SELECT * FROM Clientes WHERE Nombre LIKE 'Juan%';
+SELECT * FROM Clientes WHERE IdCliente > 1;
+
+SELECT * FROM Mesas WHERE Capacidad > 2;
+SELECT * FROM Mesas WHERE Numero < 5;
+
+SELECT * FROM Empleados WHERE Rol='Mesero';
+SELECT * FROM Empleados WHERE Nombre LIKE 'L%';
+
+SELECT * FROM Pedidos WHERE IdCliente=1;
+SELECT * FROM Pedidos WHERE IdMesa=2;
+
+SELECT * FROM DetallePedido WHERE Precio > 10;
+SELECT * FROM DetallePedido WHERE Cantidad >= 2;
+
+-- =========================
+-- INNER JOIN
+-- =========================
+SELECT p.IdPedido, c.Nombre
+FROM Pedidos p
+INNER JOIN Clientes c ON p.IdCliente = c.IdCliente;
+
+SELECT p.IdPedido, e.Nombre, d.Producto
+FROM Pedidos p
+INNER JOIN Empleados e ON p.IdEmpleado = e.IdEmpleado
+INNER JOIN DetallePedido d ON p.IdPedido = d.IdPedido;

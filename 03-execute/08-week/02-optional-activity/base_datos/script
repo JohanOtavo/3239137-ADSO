@@ -1,0 +1,750 @@
+-- =========================================================
+-- BASE DE DATOS: carrito de compra
+-- PostgreSQL - sin schemas
+-- Basado en los 4 documentos analizados
+-- =========================================================
+
+CREATE DATABASE shopping_cart_db;
+
+-- Ejecuta esto después de conectarte a la base:
+-- \c shopping_cart_db
+
+-- =========================================================
+-- PARAMETER
+-- =========================================================
+
+CREATE TABLE status (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    domain_name VARCHAR(100),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+ALTER TABLE status
+ADD CONSTRAINT fk_status_status
+FOREIGN KEY (status) REFERENCES status(id);
+
+CREATE TABLE type_document (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE file (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    file_name VARCHAR(255) NOT NULL,
+    file_path TEXT NOT NULL,
+    file_extension VARCHAR(20),
+    mime_type VARCHAR(120),
+    size BIGINT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE payment_method (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE order_status (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE payment_status (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE shipment_status (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- LOCATION
+-- =========================================================
+
+CREATE TABLE continent (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE country (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    continent_id BIGINT NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    iso_code VARCHAR(10),
+    phone_code VARCHAR(10),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE department (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    country_id BIGINT NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE city (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    department_id BIGINT NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    postal_code VARCHAR(20),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE address (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    city_id BIGINT NOT NULL,
+    line_1 VARCHAR(255) NOT NULL,
+    line_2 VARCHAR(255),
+    reference VARCHAR(255),
+    zip_code VARCHAR(20),
+    latitude NUMERIC(10,7),
+    longitude NUMERIC(10,7),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- SECURITY
+-- =========================================================
+
+CREATE TABLE person (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    type_document_id BIGINT NOT NULL,
+    document_number VARCHAR(50) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    second_last_name VARCHAR(100),
+    email VARCHAR(150),
+    phone VARCHAR(30),
+    birth_date DATE,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE role (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE user_account (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    person_id BIGINT NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    password_hash TEXT NOT NULL,
+    last_login_at TIMESTAMPTZ,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE module (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    route VARCHAR(255),
+    icon VARCHAR(100),
+    order_index INTEGER,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE app_view (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    module_id BIGINT NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    route VARCHAR(255),
+    order_index INTEGER,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE user_role (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    user_account_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE role_module (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    role_id BIGINT NOT NULL,
+    module_id BIGINT NOT NULL,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE module_view (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    module_id BIGINT NOT NULL,
+    app_view_id BIGINT NOT NULL,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- CUSTOMER
+-- =========================================================
+
+CREATE TABLE customer (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    person_id BIGINT NOT NULL,
+    customer_code VARCHAR(50) NOT NULL,
+    loyalty_points INTEGER,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE customer_address (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    customer_id BIGINT NOT NULL,
+    address_id BIGINT NOT NULL,
+    is_default BOOLEAN DEFAULT FALSE,
+    address_type VARCHAR(30),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- SUPPLIER
+-- =========================================================
+
+CREATE TABLE supplier (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    person_id BIGINT NOT NULL,
+    supplier_code VARCHAR(50) NOT NULL,
+    contact_name VARCHAR(150),
+    contact_email VARCHAR(150),
+    contact_phone VARCHAR(30),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE supplier_address (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    supplier_id BIGINT NOT NULL,
+    address_id BIGINT NOT NULL,
+    is_default BOOLEAN DEFAULT FALSE,
+    address_type VARCHAR(30),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE supplier_product (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    supplier_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    supplier_product_code VARCHAR(100),
+    purchase_price NUMERIC(14,2),
+    lead_time_days INTEGER,
+    is_primary BOOLEAN DEFAULT FALSE,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- INVENTORY
+-- =========================================================
+
+CREATE TABLE category (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    parent_category_id BIGINT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE brand (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE product (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    category_id BIGINT NOT NULL,
+    brand_id BIGINT NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    sku VARCHAR(100),
+    barcode VARCHAR(100),
+    price NUMERIC(14,2),
+    cost NUMERIC(14,2),
+    weight NUMERIC(12,3),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE product_image (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    product_id BIGINT NOT NULL,
+    file_id BIGINT NOT NULL,
+    url TEXT,
+    is_main BOOLEAN DEFAULT FALSE,
+    order_index INTEGER,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE stock (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    product_id BIGINT NOT NULL,
+    quantity_available INTEGER,
+    quantity_reserved INTEGER,
+    reorder_level INTEGER,
+    max_stock INTEGER,
+    min_stock INTEGER,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE inventory_movement (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    product_id BIGINT NOT NULL,
+    movement_type VARCHAR(30),
+    quantity INTEGER NOT NULL,
+    unit_cost NUMERIC(14,2),
+    reference_type VARCHAR(50),
+    reference_id BIGINT,
+    movement_date TIMESTAMPTZ,
+    note TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- BILLING
+-- =========================================================
+
+CREATE TABLE cart (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    customer_id BIGINT NOT NULL,
+    opened_at TIMESTAMPTZ,
+    closed_at TIMESTAMPTZ,
+    total_amount NUMERIC(14,2),
+    total_items INTEGER,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE cart_item (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    cart_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(14,2) NOT NULL,
+    subtotal NUMERIC(14,2) NOT NULL,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE "order" (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    customer_id BIGINT NOT NULL,
+    order_status_id BIGINT NOT NULL,
+    billing_address_id BIGINT,
+    shipping_address_id BIGINT,
+    order_number VARCHAR(50) NOT NULL,
+    order_date TIMESTAMPTZ,
+    subtotal NUMERIC(14,2),
+    tax_amount NUMERIC(14,2),
+    discount_amount NUMERIC(14,2),
+    shipping_amount NUMERIC(14,2),
+    total_amount NUMERIC(14,2),
+    note TEXT,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE order_item (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(14,2) NOT NULL,
+    tax_amount NUMERIC(14,2),
+    discount_amount NUMERIC(14,2),
+    subtotal NUMERIC(14,2) NOT NULL,
+    total_amount NUMERIC(14,2) NOT NULL,
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE invoice (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    order_id BIGINT NOT NULL,
+    invoice_number VARCHAR(50) NOT NULL,
+    issue_date DATE NOT NULL,
+    subtotal NUMERIC(14,2),
+    tax_amount NUMERIC(14,2),
+    total_amount NUMERIC(14,2),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE payment (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    order_id BIGINT NOT NULL,
+    payment_method_id BIGINT NOT NULL,
+    payment_status_id BIGINT NOT NULL,
+    payment_date TIMESTAMPTZ,
+    reference_number VARCHAR(100),
+    amount NUMERIC(14,2) NOT NULL,
+    authorization_code VARCHAR(100),
+    transaction_number VARCHAR(100),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE shipment (
+    id BIGSERIAL PRIMARY KEY,
+    status BIGINT NULL,
+    order_id BIGINT NOT NULL,
+    shipment_status_id BIGINT NOT NULL,
+    address_id BIGINT NOT NULL,
+    shipment_date TIMESTAMPTZ,
+    delivered_date TIMESTAMPTZ,
+    tracking_number VARCHAR(100),
+    carrier_name VARCHAR(150),
+    shipping_cost NUMERIC(14,2),
+    created_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_by BIGINT,
+    deleted_at TIMESTAMPTZ
+);
+
+-- =========================================================
+-- FOREIGN KEYS
+-- =========================================================
+
+ALTER TABLE type_document ADD CONSTRAINT fk_type_document_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE file ADD CONSTRAINT fk_file_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE payment_method ADD CONSTRAINT fk_payment_method_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE order_status ADD CONSTRAINT fk_order_status_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE payment_status ADD CONSTRAINT fk_payment_status_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE shipment_status ADD CONSTRAINT fk_shipment_status_status FOREIGN KEY (status) REFERENCES status(id);
+
+ALTER TABLE continent ADD CONSTRAINT fk_continent_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE country ADD CONSTRAINT fk_country_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE country ADD CONSTRAINT fk_country_continent FOREIGN KEY (continent_id) REFERENCES continent(id);
+ALTER TABLE department ADD CONSTRAINT fk_department_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE department ADD CONSTRAINT fk_department_country FOREIGN KEY (country_id) REFERENCES country(id);
+ALTER TABLE city ADD CONSTRAINT fk_city_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE city ADD CONSTRAINT fk_city_department FOREIGN KEY (department_id) REFERENCES department(id);
+ALTER TABLE address ADD CONSTRAINT fk_address_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE address ADD CONSTRAINT fk_address_city FOREIGN KEY (city_id) REFERENCES city(id);
+
+ALTER TABLE person ADD CONSTRAINT fk_person_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE person ADD CONSTRAINT fk_person_type_document FOREIGN KEY (type_document_id) REFERENCES type_document(id);
+ALTER TABLE role ADD CONSTRAINT fk_role_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE user_account ADD CONSTRAINT fk_user_account_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE user_account ADD CONSTRAINT fk_user_account_person FOREIGN KEY (person_id) REFERENCES person(id);
+ALTER TABLE module ADD CONSTRAINT fk_module_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE app_view ADD CONSTRAINT fk_app_view_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE app_view ADD CONSTRAINT fk_app_view_module FOREIGN KEY (module_id) REFERENCES module(id);
+ALTER TABLE user_role ADD CONSTRAINT fk_user_role_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE user_role ADD CONSTRAINT fk_user_role_user_account FOREIGN KEY (user_account_id) REFERENCES user_account(id);
+ALTER TABLE user_role ADD CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES role(id);
+ALTER TABLE role_module ADD CONSTRAINT fk_role_module_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE role_module ADD CONSTRAINT fk_role_module_role FOREIGN KEY (role_id) REFERENCES role(id);
+ALTER TABLE role_module ADD CONSTRAINT fk_role_module_module FOREIGN KEY (module_id) REFERENCES module(id);
+ALTER TABLE module_view ADD CONSTRAINT fk_module_view_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE module_view ADD CONSTRAINT fk_module_view_module FOREIGN KEY (module_id) REFERENCES module(id);
+ALTER TABLE module_view ADD CONSTRAINT fk_module_view_app_view FOREIGN KEY (app_view_id) REFERENCES app_view(id);
+
+ALTER TABLE customer ADD CONSTRAINT fk_customer_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE customer ADD CONSTRAINT fk_customer_person FOREIGN KEY (person_id) REFERENCES person(id);
+ALTER TABLE customer_address ADD CONSTRAINT fk_customer_address_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE customer_address ADD CONSTRAINT fk_customer_address_customer FOREIGN KEY (customer_id) REFERENCES customer(id);
+ALTER TABLE customer_address ADD CONSTRAINT fk_customer_address_address FOREIGN KEY (address_id) REFERENCES address(id);
+
+ALTER TABLE supplier ADD CONSTRAINT fk_supplier_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE supplier ADD CONSTRAINT fk_supplier_person FOREIGN KEY (person_id) REFERENCES person(id);
+ALTER TABLE supplier_address ADD CONSTRAINT fk_supplier_address_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE supplier_address ADD CONSTRAINT fk_supplier_address_supplier FOREIGN KEY (supplier_id) REFERENCES supplier(id);
+ALTER TABLE supplier_address ADD CONSTRAINT fk_supplier_address_address FOREIGN KEY (address_id) REFERENCES address(id);
+ALTER TABLE supplier_product ADD CONSTRAINT fk_supplier_product_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE supplier_product ADD CONSTRAINT fk_supplier_product_supplier FOREIGN KEY (supplier_id) REFERENCES supplier(id);
+ALTER TABLE supplier_product ADD CONSTRAINT fk_supplier_product_product FOREIGN KEY (product_id) REFERENCES product(id);
+
+ALTER TABLE category ADD CONSTRAINT fk_category_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE category ADD CONSTRAINT fk_category_parent FOREIGN KEY (parent_category_id) REFERENCES category(id);
+ALTER TABLE brand ADD CONSTRAINT fk_brand_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE product ADD CONSTRAINT fk_product_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE product ADD CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES category(id);
+ALTER TABLE product ADD CONSTRAINT fk_product_brand FOREIGN KEY (brand_id) REFERENCES brand(id);
+ALTER TABLE product_image ADD CONSTRAINT fk_product_image_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE product_image ADD CONSTRAINT fk_product_image_product FOREIGN KEY (product_id) REFERENCES product(id);
+ALTER TABLE product_image ADD CONSTRAINT fk_product_image_file FOREIGN KEY (file_id) REFERENCES file(id);
+ALTER TABLE stock ADD CONSTRAINT fk_stock_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE stock ADD CONSTRAINT fk_stock_product FOREIGN KEY (product_id) REFERENCES product(id);
+ALTER TABLE inventory_movement ADD CONSTRAINT fk_inventory_movement_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE inventory_movement ADD CONSTRAINT fk_inventory_movement_product FOREIGN KEY (product_id) REFERENCES product(id);
+
+ALTER TABLE cart ADD CONSTRAINT fk_cart_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE cart ADD CONSTRAINT fk_cart_customer FOREIGN KEY (customer_id) REFERENCES customer(id);
+ALTER TABLE cart_item ADD CONSTRAINT fk_cart_item_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE cart_item ADD CONSTRAINT fk_cart_item_cart FOREIGN KEY (cart_id) REFERENCES cart(id);
+ALTER TABLE cart_item ADD CONSTRAINT fk_cart_item_product FOREIGN KEY (product_id) REFERENCES product(id);
+ALTER TABLE "order" ADD CONSTRAINT fk_order_status_common FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE "order" ADD CONSTRAINT fk_order_customer FOREIGN KEY (customer_id) REFERENCES customer(id);
+ALTER TABLE "order" ADD CONSTRAINT fk_order_order_status FOREIGN KEY (order_status_id) REFERENCES order_status(id);
+ALTER TABLE "order" ADD CONSTRAINT fk_order_billing_address FOREIGN KEY (billing_address_id) REFERENCES address(id);
+ALTER TABLE "order" ADD CONSTRAINT fk_order_shipping_address FOREIGN KEY (shipping_address_id) REFERENCES address(id);
+ALTER TABLE order_item ADD CONSTRAINT fk_order_item_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE order_item ADD CONSTRAINT fk_order_item_order FOREIGN KEY (order_id) REFERENCES "order"(id);
+ALTER TABLE order_item ADD CONSTRAINT fk_order_item_product FOREIGN KEY (product_id) REFERENCES product(id);
+ALTER TABLE invoice ADD CONSTRAINT fk_invoice_status FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE invoice ADD CONSTRAINT fk_invoice_order FOREIGN KEY (order_id) REFERENCES "order"(id);
+ALTER TABLE payment ADD CONSTRAINT fk_payment_status_common FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE payment ADD CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES "order"(id);
+ALTER TABLE payment ADD CONSTRAINT fk_payment_method FOREIGN KEY (payment_method_id) REFERENCES payment_method(id);
+ALTER TABLE payment ADD CONSTRAINT fk_payment_payment_status FOREIGN KEY (payment_status_id) REFERENCES payment_status(id);
+ALTER TABLE shipment ADD CONSTRAINT fk_shipment_status_common FOREIGN KEY (status) REFERENCES status(id);
+ALTER TABLE shipment ADD CONSTRAINT fk_shipment_order FOREIGN KEY (order_id) REFERENCES "order"(id);
+ALTER TABLE shipment ADD CONSTRAINT fk_shipment_shipment_status FOREIGN KEY (shipment_status_id) REFERENCES shipment_status(id);
+ALTER TABLE shipment ADD CONSTRAINT fk_shipment_address FOREIGN KEY (address_id) REFERENCES address(id);

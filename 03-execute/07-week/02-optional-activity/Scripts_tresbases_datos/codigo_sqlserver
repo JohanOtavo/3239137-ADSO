@@ -1,0 +1,177 @@
+-- =========================
+-- CREAR BASE DE DATOS
+-- =========================
+CREATE DATABASE HotelDB;
+GO
+
+USE HotelDB;
+GO
+
+-- =========================
+-- CREAR TABLAS
+-- =========================
+CREATE TABLE Clientes (
+    IdCliente INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100),
+    Email NVARCHAR(100),
+    Telefono NVARCHAR(20)
+);
+
+CREATE TABLE Habitaciones (
+    IdHabitacion INT PRIMARY KEY IDENTITY(1,1),
+    Numero INT,
+    Tipo NVARCHAR(50),
+    Precio DECIMAL(10,2)
+);
+
+CREATE TABLE Empleados (
+    IdEmpleado INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100),
+    Cargo NVARCHAR(50)
+);
+
+CREATE TABLE Reservas (
+    IdReserva INT PRIMARY KEY IDENTITY(1,1),
+    IdCliente INT,
+    IdHabitacion INT,
+    IdEmpleado INT,
+    FechaEntrada DATE,
+    FechaSalida DATE,
+    FOREIGN KEY (IdCliente) REFERENCES Clientes(IdCliente),
+    FOREIGN KEY (IdHabitacion) REFERENCES Habitaciones(IdHabitacion),
+    FOREIGN KEY (IdEmpleado) REFERENCES Empleados(IdEmpleado)
+);
+
+CREATE TABLE Pagos (
+    IdPago INT PRIMARY KEY IDENTITY(1,1),
+    IdReserva INT,
+    Monto DECIMAL(10,2),
+    Metodo NVARCHAR(50),
+    FOREIGN KEY (IdReserva) REFERENCES Reservas(IdReserva)
+);
+
+-- =========================
+-- INSERTS
+-- =========================
+
+-- Clientes
+INSERT INTO Clientes (Nombre, Email, Telefono) VALUES
+('Juan Perez','juan@mail.com','123'),
+('Maria Lopez','maria@mail.com','456'),
+('Carlos Ruiz','carlos@mail.com','789'),
+('Ana Torres','ana@mail.com','111'),
+('Luis Diaz','luis@mail.com','222');
+
+-- Habitaciones
+INSERT INTO Habitaciones (Numero, Tipo, Precio) VALUES
+(101,'Simple',50),
+(102,'Doble',80),
+(103,'Suite',150),
+(104,'Simple',55),
+(105,'Doble',85);
+
+-- Empleados
+INSERT INTO Empleados (Nombre, Cargo) VALUES
+('Pedro','Recepcionista'),
+('Laura','Administrador'),
+('Miguel','Limpieza'),
+('Sofia','Recepcionista'),
+('Diego','Gerente');
+
+-- Reservas
+INSERT INTO Reservas (IdCliente, IdHabitacion, IdEmpleado, FechaEntrada, FechaSalida) VALUES
+(1,1,1,'2026-04-10','2026-04-12'),
+(2,2,2,'2026-04-11','2026-04-13'),
+(3,3,1,'2026-04-12','2026-04-15'),
+(4,4,3,'2026-04-13','2026-04-14'),
+(5,5,2,'2026-04-14','2026-04-16');
+
+-- Pagos
+INSERT INTO Pagos (IdReserva, Monto, Metodo) VALUES
+(1,100,'Tarjeta'),
+(2,160,'Efectivo'),
+(3,450,'Transferencia'),
+(4,55,'Tarjeta'),
+(5,170,'Efectivo');
+
+-- =========================
+-- UPDATES
+-- =========================
+
+-- Clientes
+UPDATE Clientes SET Telefono='999' WHERE IdCliente=1;
+UPDATE Clientes SET Email='nuevo@mail.com' WHERE IdCliente=2;
+
+-- Habitaciones
+UPDATE Habitaciones SET Precio=60 WHERE IdHabitacion=1;
+UPDATE Habitaciones SET Tipo='Suite' WHERE IdHabitacion=2;
+
+-- Empleados
+UPDATE Empleados SET Cargo='Supervisor' WHERE IdEmpleado=3;
+UPDATE Empleados SET Nombre='Laura Gomez' WHERE IdEmpleado=2;
+
+-- Reservas
+UPDATE Reservas SET FechaSalida='2026-04-17' WHERE IdReserva=5;
+UPDATE Reservas SET IdEmpleado=4 WHERE IdReserva=1;
+
+-- Pagos
+UPDATE Pagos SET Metodo='Transferencia' WHERE IdPago=1;
+UPDATE Pagos SET Monto=200 WHERE IdPago=2;
+
+-- =========================
+-- DELETES
+-- =========================
+
+DELETE FROM Pagos WHERE IdPago=5;
+DELETE FROM Pagos WHERE IdPago=4;
+
+DELETE FROM Reservas WHERE IdReserva=4;
+DELETE FROM Reservas WHERE IdReserva=5;
+
+DELETE FROM Clientes WHERE IdCliente=5;
+DELETE FROM Clientes WHERE IdCliente=4;
+
+DELETE FROM Habitaciones WHERE IdHabitacion=5;
+DELETE FROM Habitaciones WHERE IdHabitacion=4;
+
+DELETE FROM Empleados WHERE IdEmpleado=5;
+DELETE FROM Empleados WHERE IdEmpleado=4;
+
+-- =========================
+-- SELECTS
+-- =========================
+
+-- Clientes
+SELECT * FROM Clientes WHERE Nombre LIKE 'Juan%';
+SELECT * FROM Clientes WHERE IdCliente > 1;
+
+-- Habitaciones
+SELECT * FROM Habitaciones WHERE Precio > 70;
+SELECT * FROM Habitaciones WHERE Tipo='Simple';
+
+-- Empleados
+SELECT * FROM Empleados WHERE Cargo='Recepcionista';
+SELECT * FROM Empleados WHERE Nombre LIKE 'L%';
+
+-- Reservas
+SELECT * FROM Reservas WHERE FechaEntrada > '2026-04-11';
+SELECT * FROM Reservas WHERE IdCliente=1;
+
+-- Pagos
+SELECT * FROM Pagos WHERE Metodo='Efectivo';
+SELECT * FROM Pagos WHERE Monto > 100;
+
+-- =========================
+-- INNER JOIN
+-- =========================
+
+-- Reservas con clientes
+SELECT r.IdReserva, c.Nombre, r.FechaEntrada
+FROM Reservas r
+INNER JOIN Clientes c ON r.IdCliente = c.IdCliente;
+
+-- Reservas + habitaciones + pagos
+SELECT r.IdReserva, h.Tipo, p.Monto
+FROM Reservas r
+INNER JOIN Habitaciones h ON r.IdHabitacion = h.IdHabitacion
+INNER JOIN Pagos p ON r.IdReserva = p.IdReserva;

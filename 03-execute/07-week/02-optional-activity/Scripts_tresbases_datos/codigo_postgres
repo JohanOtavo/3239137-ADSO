@@ -1,0 +1,145 @@
+-- =========================
+-- CREAR BASE DE DATOS
+-- =========================
+CREATE DATABASE inventario;
+-- Conéctate a la DB antes de seguir
+
+-- =========================
+-- TABLAS
+-- =========================
+CREATE TABLE proveedores (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    telefono VARCHAR(20)
+);
+
+CREATE TABLE productos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    precio NUMERIC
+);
+
+CREATE TABLE almacenes (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    ubicacion VARCHAR(100)
+);
+
+CREATE TABLE empleados (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    cargo VARCHAR(50)
+);
+
+CREATE TABLE inventario (
+    id SERIAL PRIMARY KEY,
+    producto_id INT REFERENCES productos(id),
+    proveedor_id INT REFERENCES proveedores(id),
+    almacen_id INT REFERENCES almacenes(id),
+    empleado_id INT REFERENCES empleados(id),
+    cantidad INT
+);
+
+-- =========================
+-- INSERTS
+-- =========================
+INSERT INTO proveedores VALUES
+(1,'Proveedor1','123'),
+(2,'Proveedor2','456'),
+(3,'Proveedor3','789'),
+(4,'Proveedor4','111'),
+(5,'Proveedor5','222');
+
+INSERT INTO productos VALUES
+(1,'Laptop',1000),
+(2,'Mouse',20),
+(3,'Teclado',50),
+(4,'Monitor',300),
+(5,'USB',10);
+
+INSERT INTO almacenes VALUES
+(1,'Central','Bogota'),
+(2,'Norte','Medellin'),
+(3,'Sur','Cali'),
+(4,'Este','Barranquilla'),
+(5,'Oeste','Cartagena');
+
+INSERT INTO empleados VALUES
+(1,'Pedro','Operador'),
+(2,'Laura','Supervisor'),
+(3,'Miguel','Operador'),
+(4,'Sofia','Auxiliar'),
+(5,'Diego','Gerente');
+
+INSERT INTO inventario VALUES
+(1,1,1,1,1,10),
+(2,2,2,2,2,50),
+(3,3,3,3,1,30),
+(4,4,4,4,3,20),
+(5,5,5,5,2,100);
+
+-- =========================
+-- UPDATES
+-- =========================
+UPDATE proveedores SET telefono='999' WHERE id=1;
+UPDATE proveedores SET nombre='ProvX' WHERE id=2;
+
+UPDATE productos SET precio=1200 WHERE id=1;
+UPDATE productos SET nombre='Mouse Gamer' WHERE id=2;
+
+UPDATE almacenes SET ubicacion='Bogota Norte' WHERE id=1;
+UPDATE almacenes SET nombre='Principal' WHERE id=2;
+
+UPDATE empleados SET cargo='Supervisor' WHERE id=3;
+UPDATE empleados SET nombre='Laura G' WHERE id=2;
+
+UPDATE inventario SET cantidad=200 WHERE id=1;
+UPDATE inventario SET almacen_id=3 WHERE id=2;
+
+-- =========================
+-- DELETES
+-- =========================
+DELETE FROM inventario WHERE id=5;
+DELETE FROM inventario WHERE id=4;
+
+DELETE FROM proveedores WHERE id=5;
+DELETE FROM proveedores WHERE id=4;
+
+DELETE FROM productos WHERE id=5;
+DELETE FROM productos WHERE id=4;
+
+DELETE FROM almacenes WHERE id=5;
+DELETE FROM almacenes WHERE id=4;
+
+DELETE FROM empleados WHERE id=5;
+DELETE FROM empleados WHERE id=4;
+
+-- =========================
+-- SELECTS
+-- =========================
+SELECT * FROM proveedores WHERE nombre LIKE 'Proveedor%';
+SELECT * FROM proveedores WHERE id > 1;
+
+SELECT * FROM productos WHERE precio > 100;
+SELECT * FROM productos WHERE nombre LIKE 'M%';
+
+SELECT * FROM almacenes WHERE ubicacion LIKE '%Bogota%';
+SELECT * FROM almacenes WHERE id < 3;
+
+SELECT * FROM empleados WHERE cargo='Operador';
+SELECT * FROM empleados WHERE nombre LIKE 'L%';
+
+SELECT * FROM inventario WHERE cantidad > 20;
+SELECT * FROM inventario WHERE producto_id=1;
+
+-- =========================
+-- INNER JOIN
+-- =========================
+SELECT i.id, p.nombre
+FROM inventario i
+INNER JOIN productos p ON i.producto_id = p.id;
+
+SELECT i.id, pr.nombre, a.nombre
+FROM inventario i
+INNER JOIN proveedores pr ON i.proveedor_id = pr.id
+INNER JOIN almacenes a ON i.almacen_id = a.id;
