@@ -1,0 +1,23 @@
+# Dependencias y artefactos: el acta pide que no entren al repositorio.
+vendor/
+node_modules/
+dist/
+build/
+
+# Secretos: solo se versiona el ejemplo.
+.env
+.env.*
+!.env.example
+
+# El .gitignore de la raiz ignora este archivo, y el app lo necesita
+# para que "npm ci" instale versiones exactas.
+!package-lock.json
+
+# Laravel
+/api/storage/logs/*
+/api/storage/framework/cache/data/*
+/api/storage/framework/views/*
+/api/storage/app/covers/*
+/api/bootstrap/cache/*
+.phpunit.cache/
+.phpunit.result.cache
