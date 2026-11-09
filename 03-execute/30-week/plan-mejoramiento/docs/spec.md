@@ -99,3 +99,24 @@ Como usuario quiero autenticarme para operar según mi rol.
 - **CA-10.3** El reporte **no** se desglosa por asesor ni por productor.
 - **CA-10.4** Un reporte de un periodo cerrado **no cambia** aunque luego se renombre el equipo o su categoría.
 - **CA-10.5** Solo `admin`.
+
+## 4. Reglas de negocio
+
+| # | Regla |
+|---|---|
+| RN-1 | Unidades disponibles entre 0 y el total, siempre. |
+| RN-2 | Plazo de alquiler: 4 días. Máximo 2 equipos sin devolver por productor. |
+| RN-3 | Un productor con vencidos no alquila más hasta devolverlos. |
+| RN-4 | Lo congelado en la línea (nombre, código de modelo, categoría) no sigue al catálogo. |
+| RN-5 | Alquileres y devoluciones no se borran. Los equipos solo tienen baja lógica. |
+| RN-6 | Las fechas son instantes UTC. El texto al usuario va en español; el código, en inglés. |
+
+## 5. Requisitos no funcionales
+
+| # | Requisito | Cómo se mide |
+|---|---|---|
+| RNF-1 | La búsqueda de equipos responde en menos de 300 ms con 5 000 equipos | Prueba de carga con el sembrador de `tool` |
+| RNF-2 | Dos asesores entregando la **última unidad** a la vez: uno gana, el otro recibe 409 | Prueba concurrente con dos procesos |
+| RNF-3 | La contraseña nunca viaja ni se guarda en claro; nunca aparece en logs | Revisión de logs y de respuestas |
+| RNF-4 | Todo error HTTP usa el mismo cuerpo (ver contrato) | Prueba de contrato |
+| RNF-5 | El sistema levanta con un solo comando y la base arranca vacía | `README` de `infra` |
