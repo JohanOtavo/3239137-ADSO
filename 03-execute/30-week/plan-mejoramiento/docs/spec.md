@@ -65,3 +65,37 @@ Como usuario quiero autenticarme para operar según mi rol.
 - **CA-05.1** El admin y el asesor crean productores con nombre y documento. El documento es único: repetido 409.
 - **CA-05.2** Se lista y se busca por nombre o documento, paginado.
 - **CA-05.3** Los productores no se eliminan.
+
+### HU-06 · Registrar un alquiler
+- **CA-06.1** Un alquiler es de **un** productor, lo registra el usuario autenticado y trae de 1 a 2 líneas.
+- **CA-06.2** No se repite el mismo equipo en un alquiler (422).
+- **CA-06.3** Cada línea descuenta **1** unidad disponible en la misma operación. Sin unidades: 409 y **no se
+  registra nada**.
+- **CA-06.4** Un productor no puede tener más de **2 equipos sin devolver** en total (422 con el conteo actual).
+- **CA-06.5** Un productor con algún equipo **vencido** no puede alquilar otro (409).
+- **CA-06.6** La fecha de vencimiento es `rented_at + 4 días`. La línea congela nombre, código de modelo y nombre
+  de categoría **en ese instante**.
+- **CA-06.7** El alquiler registrado no se edita ni se borra.
+
+### HU-07 · Registrar una devolución
+- **CA-07.1** Se devuelve **una línea** a la vez. Pone `returned_at` y suma 1 a las unidades disponibles.
+- **CA-07.2** Devolver una línea ya devuelta: 409. **Nunca** suma dos veces.
+- **CA-07.3** Las unidades disponibles jamás superan el total (la base lo garantiza).
+- **CA-07.4** Cuando todas las líneas están devueltas, el alquiler figura como **cerrado**.
+
+### HU-08 · Ver un alquiler y listar alquileres
+- **CA-08.1** Consultar un alquiler trae sus líneas y su estado calculado (`open`, `overdue`, `closed`).
+- **CA-08.2** Listar por rango de fechas, estado y productor, orden por fecha descendente, paginado.
+- **CA-08.3** El estado **se calcula**, no se almacena.
+
+### HU-09 · Equipos vencidos
+- **CA-09.1** Lista las líneas sin devolver con `due_at` anterior a ahora: equipo, productor, días de retraso.
+- **CA-09.2** Ordenadas por más días de retraso primero. Solo `admin` y `advisor`.
+
+### HU-10 · Reporte de equipos más solicitados
+- **CA-10.1** Dado un rango de fechas, una fila por **equipo y nombre de categoría congelado**, con la cantidad de
+  veces alquilado, ordenado de mayor a menor.
+- **CA-10.2** Fin anterior al inicio: 422. Rango sin alquileres: lista vacía, no error.
+- **CA-10.3** El reporte **no** se desglosa por asesor ni por productor.
+- **CA-10.4** Un reporte de un periodo cerrado **no cambia** aunque luego se renombre el equipo o su categoría.
+- **CA-10.5** Solo `admin`.
