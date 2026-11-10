@@ -138,3 +138,64 @@ disponibles las calcula el servidor. `model_code` no se edita: identifica al equ
 // 201
 { "id": "…", "full_name": "Laura Ortiz", "document_number": "1098765432" }
 ```
+
+### 3.6 Alquileres
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| POST | `/rentals` | admin, advisor | Registra un alquiler |
+| GET | `/rentals` | admin, advisor | Lista: `from`, `to`, `status`, `producer_id`, `page`, `size` |
+| GET | `/rentals/{id}` | admin, advisor | Detalle con líneas y estado |
+| POST | `/rentals/{rental_id}/items/{item_id}/return` | admin, advisor | Devuelve una línea |
+| GET | `/rentals/overdue` | admin, advisor | Líneas vencidas |
+
+`POST /rentals`
+
+```json
+// petición  (1 o 2 elementos, sin equipos repetidos)
+{ "producer_id": "…", "items": [ { "equipment_id": "…" }, { "equipment_id": "…" } ] }
+// 201
+{
+  "id": "…", "producer_id": "…", "rented_at": "2026-11-10T14:15:00Z", "status": "open",
+  "items": [
+    { "id": "…", "equipment_id": "…", "equipment_name": "Sony FX3", "model_code": "FX3-BODY",
+      "category_name": "Cámaras", "due_at": "2026-11-14T14:15:00Z", "returned_at": null }
+  ]
+}
+```
+
+`status` es calculado: `open` (hay líneas sin devolver y ninguna vencida), `overdue` (alguna sin devolver y
+vencida), `closed` (todas devueltas).
+
+`POST /rentals/{rental_id}/items/{item_id}/return` → 200 con la línea (`returned_at` lleno).
+
+`GET /rentals/overdue` → `items`: `{ "rental_id", "item_id", "equipment_name", "producer_name", "due_at", "days_late" }`.
+Aquí sí se muestra el nombre del productor, porque es un listado operativo; **el reporte del §3.7 no**.
+
+### 3.7 Reporte
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| GET | `/reports/most-requested` | admin | `from` y `to` obligatorios (fecha, ambos inclusive) |
+
+```json
+{
+  "from": "2026-11-01", "to": "2026-11-30",
+  "rows": [
+    { "equipment_id": "…", "equipment_name": "Sony FX3", "category_name": "Cámaras", "times_rented": 12 }
+  ]
+}
+```
+
+Una fila por `equipment_id + equipment_name + category_name` congelados. Orden: `times_rented` descendente, luego
+nombre. Sin productores ni asesores.
+
+## 4. Seguridad
+
+| Aspecto | Regla |
+|---|---|
+| Token | JWT firmado, 8 horas, con `sub` y `role`. Sin datos personales dentro |
+| Contraseñas | Solo se guarda el hash; el hash nunca sale en ninguna respuesta |
+| Autorización | Se evalúa en cada endpoint por rol; un 403 no revela si el recurso existe |
+| CORS | Solo el origen del frontend configurado por entorno |
+| Subida de foto | Solo `image/jpeg` y `image/png`, máx. 2 MB; el tipo se valida por contenido, no por extensión |
