@@ -38,3 +38,61 @@ Qué hace cada operación está en [`spec.md`](spec.md); qué se guarda, en [`da
 | 404 | No existe (o está dado de baja) |
 | 409 | Conflicto de estado: duplicado, sin unidades, ya devuelto, productor con vencidos, equipo con alquileres abiertos |
 | 422 | Validación: campo inválido, regla de entrada rota, rango de fechas invertido |
+
+## 2. Códigos de error de negocio
+
+| `code` | Estado | Origen |
+|---|---|---|
+| `INVALID_CREDENTIALS` | 401 | CA-01.2 |
+| `FORBIDDEN_ROLE` | 403 | CA-01.3 |
+| `NOT_FOUND` | 404 | Cualquier recurso |
+| `USERNAME_TAKEN` | 409 | CA-02.2 |
+| `MODEL_CODE_TAKEN` | 409 | CA-03.2 |
+| `DOCUMENT_TAKEN` | 409 | CA-05.1 |
+| `EQUIPMENT_HAS_OPEN_RENTALS` | 409 | CA-03.5 |
+| `EQUIPMENT_NOT_AVAILABLE` | 409 | CA-06.3 |
+| `PRODUCER_HAS_OVERDUE` | 409 | CA-06.5 |
+| `ITEM_ALREADY_RETURNED` | 409 | CA-07.2 |
+| `PRODUCER_LIMIT_EXCEEDED` | 422 | CA-06.4 |
+| `DUPLICATE_EQUIPMENT_IN_RENTAL` | 422 | CA-06.2 |
+| `VALIDATION_ERROR` | 422 | Cualquier campo inválido |
+| `INVALID_DATE_RANGE` | 422 | CA-10.2 |
+
+Catorce códigos y ninguno más. Un error que no encaje en esta tabla es un defecto, no un caso de negocio.
+
+## 3. Endpoints
+
+### 3.1 Autenticación y salud
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| POST | `/auth/login` | público | Devuelve token |
+| GET | `/health` | público | `{ "status": "ok" }` |
+
+`POST /auth/login`
+
+```json
+// petición
+{ "username": "ana", "password": "********" }
+// 200
+{ "access_token": "eyJ...", "token_type": "Bearer", "expires_in": 28800, "role": "advisor" }
+```
+
+### 3.2 Usuarios
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| POST | `/users` | admin | Crea un asesor |
+
+```json
+// petición  (role solo admite "advisor")
+{ "username": "Ana ", "password": "********", "role": "advisor" }
+// 201  (sin password ni password_hash)
+{ "id": "…", "username": "ana", "role": "advisor" }
+```
+
+### 3.3 Categorías
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| GET | `/categories` | autenticado | Las cinco categorías, orden por nombre |
