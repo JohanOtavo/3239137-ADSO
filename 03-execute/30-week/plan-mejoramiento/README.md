@@ -50,6 +50,23 @@ sistema.
 En construcción. El avance queda en el historial de commits de esta carpeta, un
 commit por pieza terminada.
 
+Los documentos de la especificación, y cuáles existen ya. Los enlaces a los que
+aún no están darán 404 hasta la fecha indicada:
+
+| Documento | Estado |
+|---|---|
+| `docs/constitution.md` | Escrito |
+| `docs/spec.md` | Escrito |
+| `docs/data-model.md` | Escrito |
+| `docs/api-contract.md` | Pendiente |
+| `docs/plan.md` | Pendiente |
+| `docs/architecture.md` | Pendiente |
+| `docs/tasks.md` | Pendiente |
+| `docs/adr/` (cuatro) | Pendiente |
+
+Nada en esta carpeta declara terminado lo que no lo está: es el artículo XII, y
+es la razón por la que esta tabla existe.
+
 ## Documento del plan
 
 El acta del plan de mejoramiento, en su versión con código y sin datos
