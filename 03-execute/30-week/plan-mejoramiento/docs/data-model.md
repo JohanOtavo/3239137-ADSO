@@ -116,3 +116,46 @@ Ninguna columna lleva `DEFAULT`: los valores los pone el dominio.
 
 Reglas transversales: **todas las marcas de tiempo son `timestamptz`**; **no hay columnas de auditoría**
 (`created_at`/`updated_at`) porque ningún requisito las pide.
+
+## 4. Restricciones e índices: dónde vive cada regla
+
+| Regla | Objeto | Marca |
+|---|---|---|
+| Claves primarias de las seis tablas | `PK_*` | **motor** |
+| `category.name` único | índice único | **motor** |
+| `producer.document_number` único | índice único | **motor** |
+| `user.username` único | índice único | **motor** |
+| `model_code` único entre activos | índice único parcial `WHERE deleted_at IS NULL` | **motor** |
+| `equipment.category_id` → `category.id` RESTRICT | FK | **motor** |
+| `rental.producer_id` → `producer.id` RESTRICT | FK | **motor** |
+| `rental.rented_by_user_id` → `user.id` RESTRICT | FK | **motor** |
+| `rental_item.rental_id` → `rental.id` CASCADE | FK | **motor** |
+| `rental_item.equipment_id` → `equipment.id` RESTRICT | FK | **motor** |
+| `0 <= available_units <= total_units` | `ck_equipment_available_range` | **motor** — última barrera de concurrencia |
+| `total_units >= 1` | `ck_equipment_total_positive` | **motor** |
+| `role` en (`admin`,`advisor`) | `ck_user_role` | **motor** |
+| Único `(rental_id, equipment_id)` | índice único | **motor** |
+| Máximo 2 sin devolver por productor | — | **solo dominio** (no expresable en un `CHECK`) |
+| Productor con vencidos no alquila | — | **solo dominio** |
+| Descontar unidad y crear línea son una operación | — | **solo dominio** (una transacción) |
+| Un alquiler tiene 1 o 2 líneas | — | **solo dominio** |
+| Alquileres y devoluciones inmutables salvo `returned_at` | — | **solo dominio** (por ausencia de operación) |
+
+**Ninguna regla queda marcada como pendiente.** Las tres restricciones `CHECK` entran en la migración inicial, no
+en una posterior: una regla que el motor puede imponer y no impone protege a la aplicación, no a los datos
+(artículo VI).
+
+Índices de acceso: `equipment (category_id, name)` parcial sobre activos; `rental (rented_at)`;
+`rental_item (equipment_id)`; `rental_item (due_at) WHERE returned_at IS NULL` para vencidos.
+
+## 5. Política de claves foráneas
+
+| # | FK | `ON DELETE` | Por qué |
+|---|---|---|---|
+| FK-1 | `equipment.category_id` | RESTRICT | Una categoría con equipos no se elimina |
+| FK-2 | `rental_item.rental_id` | CASCADE | Composición: la línea no vive sin su alquiler (nunca se dispara: no se borran alquileres) |
+| FK-3 | `rental_item.equipment_id` | RESTRICT | Barrera de última instancia: un borrado manual no puede huerfanar el histórico |
+| FK-4 | `rental.producer_id` | RESTRICT | El productor de un alquiler no desaparece |
+| FK-5 | `rental.rented_by_user_id` | RESTRICT | La autoría es un dato contable |
+
+`ON UPDATE NO ACTION` en todas: las claves son UUID de la aplicación y no cambian.
