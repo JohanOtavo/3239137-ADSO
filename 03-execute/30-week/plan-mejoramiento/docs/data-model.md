@@ -159,3 +159,59 @@ en una posterior: una regla que el motor puede imponer y no impone protege a la 
 | FK-5 | `rental.rented_by_user_id` | RESTRICT | La autoría es un dato contable |
 
 `ON UPDATE NO ACTION` en todas: las claves son UUID de la aplicación y no cambian.
+
+## 6. Patrones de acceso
+
+| # | Patrón | Frecuencia |
+|---|---|---|
+| Q1 | Buscar equipos (texto, categoría, activos, orden por nombre, paginado) | Alta |
+| Q2 | Equipo por id | Alta |
+| Q3 | Equipos por lote de ids (antes de alquilar) | Alta, punto de contención |
+| Q4 | Listar categorías | Alta |
+| Q5 | Alquiler con sus líneas | Media |
+| Q6 | Alquileres por rango, estado y productor | Alta |
+| Q7 | Líneas sin devolver de un productor (cuenta y vencidos) | Alta, en cada alquiler |
+| Q8 | Vencidos globales | Media |
+| Q9 | Reporte: más solicitados por rango | Alta, la más costosa |
+| Q10 | Usuario por nombre | Alta, en cada inicio de sesión |
+
+## 7. Privacidad y retención
+
+| Tabla | Atributo | Clasificación | Manejo |
+|---|---|---|---|
+| `user` | `username` | Dato personal | Acceso restringido |
+| `user` | `password_hash` | **Secreto** | Jamás en logs ni respuestas; nunca se indexa |
+| `producer` | `full_name`, `document_number` | **Dato personal** | Solo `admin` y `advisor`; **nunca** en el reporte ni en endpoints públicos |
+| `rental`, `rental_item` | todos | Comerciales; `producer_id` es dato personal indirecto | Retención indefinida |
+| `equipment`, `category` | todos | Públicos | Baja lógica / sin borrado |
+
+El reporte agrega por equipo: **no expone productores ni asesores**.
+
+**Retención:** alquileres y líneas nunca se borran; equipos solo baja lógica; el binario de la foto es el **único**
+dato que se borra físicamente. Orden obligatorio: primero se anula `photo_key` y se confirma la transacción;
+después se borra el binario.
+
+## 8. Auditoría
+
+El sistema **no** lleva `created_at`/`updated_at`. Los instantes de negocio ya tienen columna: `rental.rented_at`,
+`rental_item.returned_at` y `equipment.deleted_at`. Si aparece una pregunta del tipo «¿quién cambió este
+nombre?», la decisión vuelve al propietario.
+
+## 9. Estrategia de semilla
+
+Las **cinco categorías** van en la migración inicial, con identificadores fijos:
+
+| `id` | `name` |
+|---|---|
+| `11111111-1111-4111-8111-111111111111` | Cámaras |
+| `22222222-2222-4222-8222-222222222222` | Lentes |
+| `33333333-3333-4333-8333-333333333333` | Drones |
+| `44444444-4444-4444-8444-444444444444` | Audio |
+| `55555555-5555-4555-8555-555555555555` | Estabilizadores |
+
+Los nombres van en español porque son **texto que ve el usuario**, no identificadores: aparecen tal cual en el
+catálogo y en el reporte (artículo XI).
+
+El **administrador inicial no lo siembra la base**: lo crea el arranque de la aplicación con credenciales de
+entorno, porque el hash solo puede producirlo el puerto de hash. El sembrador de datos de demostración (`tool`)
+usa la **API**, nunca SQL directo.
