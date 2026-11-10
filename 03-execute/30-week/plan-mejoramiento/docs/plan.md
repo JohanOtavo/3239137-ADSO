@@ -26,3 +26,38 @@ describe aquí: vive en [`data-model.md`](data-model.md). La forma del sistema, 
 **Sin modelos de Eloquent.** Un modelo por tabla sería un segundo dominio en paralelo, con sus propias reglas y
 su propia idea de qué es un equipo. El dominio ya existe en `api/app/Domain/`; los repositorios solo traducen
 filas a esos objetos y al revés.
+
+## 2. Configuración por entorno
+
+| Variable | Obligatoria | Ejemplo |
+|---|---|---|
+| `DATABASE_URL` o `DB_*` | sí | `pgsql://filmgear@db:5432/filmgear` |
+| `DB_SCHEMA` | sí | `filmgear` |
+| `JWT_SECRET` | sí | cadena larga aleatoria |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | sí | definidos en `.env`, nunca en el repositorio |
+| `PHOTOS_DIR` | no | `storage/app/photos` |
+| `CORS_ORIGIN` | sí | `http://localhost:5173` |
+
+Un secreto ausente se nota al levantar, no en la primera petición: el arranque falla si falta `JWT_SECRET`.
+
+## 3. Estrategia de pruebas
+
+| Nivel | Qué prueba | Contra qué |
+|---|---|---|
+| Dominio | Invariantes: máximo 2, vencimiento a 4 días, unidades en rango | Nada: objetos puros |
+| Aplicación | Casos de uso: alquilar, devolver, reporte | Dobles de los puertos |
+| Integración | Repositorios y consulta del reporte | PostgreSQL real |
+| Contrato | Cuerpo de error único y códigos de estado | La API levantada |
+| Arquitectura | Artículos I, II y III | Los propios archivos |
+| Concurrencia | Dos procesos por la última unidad | PostgreSQL real |
+| Carga | Búsqueda con 5 000 equipos bajo 300 ms | PostgreSQL real |
+| Idioma | Artículo XI | Los propios archivos |
+
+El acta pide **15 o más archivos de prueba**. Esa cuenta se lleva en [`tasks.md`](tasks.md), no aquí.
+
+## 4. Orden de construcción
+
+Esqueleto y salud → migración inicial con semilla → dominio → casos de uso con dobles → adaptadores → API →
+pruebas de contrato, concurrencia y carga → frontend → sitio público.
+
+El detalle, con su evidencia, está en [`tasks.md`](tasks.md).
