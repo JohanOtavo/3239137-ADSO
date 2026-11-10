@@ -215,3 +215,41 @@ catálogo y en el reporte (artículo XI).
 El **administrador inicial no lo siembra la base**: lo crea el arranque de la aplicación con credenciales de
 entorno, porque el hash solo puede producirlo el puerto de hash. El sembrador de datos de demostración (`tool`)
 usa la **API**, nunca SQL directo.
+
+## 10. Cómo se comprueba que este documento no miente
+
+```sql
+-- Debe devolver las columnas de §3, sin ningún DEFAULT
+SELECT table_name, ordinal_position, column_name, data_type, is_nullable, column_default
+FROM information_schema.columns WHERE table_schema = 'filmgear' ORDER BY 1, 2;
+
+-- No debe devolver ninguna fila: no hay columnas de auditoría ni estado almacenado
+SELECT table_name, column_name FROM information_schema.columns
+WHERE table_schema = 'filmgear' AND column_name IN ('created_at', 'updated_at', 'status', 'days_late');
+
+-- Restricciones: PK, FK y CHECK
+SELECT c.conrelid::regclass, c.conname, c.contype::text, pg_get_constraintdef(c.oid)
+FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
+WHERE n.nspname = 'filmgear' ORDER BY 1, 3, 2;
+
+-- Índices
+SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'filmgear' ORDER BY 1, 2;
+```
+
+Si una regla marcada **motor** no aparece, alguien la borró. Si una marcada **solo dominio** aparece, ya se bajó y
+hay que reclasificarla. Gana el motor: el documento está roto y se corrige el documento.
+
+Las tres restricciones `CHECK` se comprueban además rompiéndolas a mano, que es la evidencia que pide el
+artículo XII:
+
+```sql
+-- Las tres deben fallar
+INSERT INTO filmgear.equipment (id, name, brand, model_code, category_id, total_units, available_units, photo_key, deleted_at)
+VALUES ('99999999-9999-4999-8999-999999999999', 'Roto', 'X', 'ROTO-01', '11111111-1111-4111-8111-111111111111', 0, 0, NULL, NULL);
+
+INSERT INTO filmgear.equipment (id, name, brand, model_code, category_id, total_units, available_units, photo_key, deleted_at)
+VALUES ('99999999-9999-4999-8999-999999999998', 'Roto', 'X', 'ROTO-02', '11111111-1111-4111-8111-111111111111', 1, 5, NULL, NULL);
+
+INSERT INTO filmgear."user" (id, username, password_hash, role)
+VALUES ('88888888-8888-4888-8888-888888888888', 'roto', 'x', 'superadmin');
+```
