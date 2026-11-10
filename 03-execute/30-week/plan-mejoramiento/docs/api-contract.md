@@ -96,3 +96,45 @@ Catorce códigos y ninguno más. Un error que no encaje en esta tabla es un defe
 | Método | Ruta | Rol | Descripción |
 |---|---|---|---|
 | GET | `/categories` | autenticado | Las cinco categorías, orden por nombre |
+
+### 3.4 Equipos
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| GET | `/equipment` | autenticado | Búsqueda: `q`, `category_id`, `page`, `size` |
+| GET | `/equipment/{id}` | autenticado | Detalle |
+| POST | `/equipment` | admin | Crea |
+| PUT | `/equipment/{id}` | admin | Reemplaza nombre, marca, categoría y total de unidades |
+| DELETE | `/equipment/{id}` | admin | Baja lógica |
+| PUT | `/equipment/{id}/photo` | admin | Sube foto (`multipart/form-data`, campo `file`) |
+| DELETE | `/equipment/{id}/photo` | admin | Quita la foto |
+| GET | `/equipment/{id}/photo` | autenticado | Devuelve el binario o 404 |
+
+Equipo (respuesta):
+
+```json
+{
+  "id": "…", "name": "Sony FX3", "brand": "Sony", "model_code": "FX3-BODY",
+  "category": { "id": "…", "name": "Cámaras" },
+  "total_units": 4, "available_units": 3, "photo_key": null
+}
+```
+
+`POST /equipment` (petición): `name`, `brand`, `model_code`, `category_id`, `total_units`. Las unidades
+disponibles las calcula el servidor. `model_code` no se edita: identifica al equipo.
+
+`photo_key` es una clave opaca: para pintar la foto se usa `GET /equipment/{id}/photo`. La subida se valida por
+**contenido**, no por extensión, y acepta solo `image/jpeg` e `image/png` hasta 2 MB.
+
+### 3.5 Productores
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| GET | `/producers` | admin, advisor | Lista y busca: `q`, `page`, `size` |
+| GET | `/producers/{id}` | admin, advisor | Detalle con `open_rentals` (conteo sin devolver) |
+| POST | `/producers` | admin, advisor | Crea: `full_name`, `document_number` |
+
+```json
+// 201
+{ "id": "…", "full_name": "Laura Ortiz", "document_number": "1098765432" }
+```
