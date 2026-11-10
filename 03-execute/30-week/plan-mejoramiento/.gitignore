@@ -1,23 +1,23 @@
-# Dependencias y artefactos: el acta pide que no entren al repositorio.
+# Dependencies and build output: the plan requires these stay out of the repository.
 vendor/
 node_modules/
 dist/
 build/
 
-# Secretos: solo se versiona el ejemplo.
+# Secrets: only the example file is versioned.
 .env
 .env.*
 !.env.example
 
-# El .gitignore de la raiz ignora este archivo, y el app lo necesita
-# para que "npm ci" instale versiones exactas.
+# The repository root ignores this file, and the frontend needs it so that
+# "npm ci" installs exact versions.
 !package-lock.json
 
 # Laravel
 /api/storage/logs/*
 /api/storage/framework/cache/data/*
 /api/storage/framework/views/*
-/api/storage/app/covers/*
+/api/storage/app/photos/*
 /api/bootstrap/cache/*
 .phpunit.cache/
 .phpunit.result.cache
