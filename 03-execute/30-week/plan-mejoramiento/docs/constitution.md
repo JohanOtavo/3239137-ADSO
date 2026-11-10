@@ -92,10 +92,28 @@ Si el documento de datos y la base discrepan, el documento está roto y se corri
 
 **Por qué:** un proyecto con identificadores en dos idiomas obliga a traducir mentalmente en cada lectura, y los
 comentarios son código: viven junto a lo que explican y se leen con él.
-**Verificación:** el workflow `.github/workflows/language-guard.yml` recorre los archivos de código, cuenta identificadores
-y comentarios contra una lista de términos en español y **falla el build** si encuentra alguno.
+**Verificación:** `tool/check-language.mjs` recorre los archivos de código, cuenta identificadores y comentarios
+contra una lista de términos en español y sale con código distinto de cero si encuentra alguno. Se ejecuta a mano
+con `node tool/check-language.mjs` y en cada push desde `.github/workflows/language-guard.yml`, que vive en la
+**raíz del repositorio** —GitHub Actions no lee workflows en subcarpetas— y queda acotado a esta carpeta con
+`paths`.
 
 ## Artículo XII — Nada se da por hecho sin evidencia
 
 Una tarea de [`tasks.md`](tasks.md) está terminada cuando su **evidencia** existe y se puede ejecutar, no cuando «ya está
 programada». Un documento que declare terminado algo sin evidencia ejecutable está incumpliendo este artículo.
+
+---
+
+## Las decisiones de arquitectura
+
+Cuatro, y este documento las cita por su nombre de archivo:
+
+| ADR | Decisión |
+|---|---|
+| [ADR-001](adr/adr-001-propiedad-del-esquema.md) | El esquema es propiedad de las migraciones; `infra` levanta un motor vacío |
+| [ADR-002](adr/adr-002-concurrencia-optimista.md) | Concurrencia optimista sobre las unidades disponibles |
+| [ADR-003](adr/adr-003-baja-logica.md) | Baja lógica del catálogo, sin borrado físico |
+| [ADR-004](adr/adr-004-reporte-agregado-y-congelado.md) | Reporte agregado sobre valores congelados |
+
+El acta pide al menos tres. Son cuatro porque son cuatro las decisiones que hubo que tomar.
