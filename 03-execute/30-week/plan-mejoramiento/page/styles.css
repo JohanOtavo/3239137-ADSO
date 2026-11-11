@@ -152,3 +152,38 @@ h3 {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+.wide {
+  max-width: 64ch;
+  color: var(--muted);
+  margin: 0 0 1.6rem;
+}
+
+.categories {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+  gap: 0.7rem;
+}
+
+.categories li {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
