@@ -243,3 +243,35 @@ h3 {
   color: var(--ink);
   font-size: 0.95rem;
 }
+
+footer {
+  border-top: 1px solid var(--line);
+  margin-top: 1.5rem;
+}
+
+footer p {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 1.4rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* Narrow screens: the navigation centres and the hero loses its wide gutters. */
+@media (max-width: 680px) {
+  .nav {
+    justify-content: center;
+  }
+
+  .hero {
+    padding-bottom: 2.5rem;
+  }
+
+  main {
+    padding-top: 2rem;
+  }
+
+  .band {
+    padding: 1.3rem 1.1rem;
+  }
+}
