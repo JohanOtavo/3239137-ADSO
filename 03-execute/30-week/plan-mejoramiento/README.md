@@ -59,10 +59,10 @@ aún no están darán 404 hasta la fecha indicada:
 | `docs/spec.md` | Escrito |
 | `docs/data-model.md` | Escrito |
 | `docs/api-contract.md` | Pendiente |
-| `docs/plan.md` | Pendiente |
-| `docs/architecture.md` | Pendiente |
-| `docs/tasks.md` | Pendiente |
-| `docs/adr/` (cuatro) | Pendiente |
+| `docs/plan.md` | Escrito |
+| `docs/architecture.md` | Escrito |
+| `docs/tasks.md` | Escrito |
+| `docs/adr/` (cuatro) | Escritas |
 
 Nada en esta carpeta declara terminado lo que no lo está: es el artículo XII, y
 es la razón por la que esta tabla existe.
