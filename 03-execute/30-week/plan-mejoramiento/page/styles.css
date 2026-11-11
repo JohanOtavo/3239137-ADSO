@@ -1,0 +1,277 @@
+/* film-gear public site. No framework, no build step, no API calls. */
+
+:root {
+  --ink: #15202b;
+  --muted: #5b6a7a;
+  --line: #dfe5ec;
+  --paper: #ffffff;
+  --bg: #f5f7fa;
+  --accent: #0f5c4d;
+  --accent-soft: #e6f2ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.6;
+}
+
+/* Keyboard users land here first and can jump past the navigation. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  background: var(--paper);
+  border-radius: 8px;
+}
+
+.hero {
+  background: linear-gradient(165deg, #0b3b31, #0f5c4d 55%, #157a66);
+  color: #fff;
+  padding-bottom: 4rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 1.1rem 1.5rem;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-size: 1.05rem;
+}
+
+.brand-accent {
+  color: #7fd6bf;
+}
+
+.nav ul {
+  display: flex;
+  gap: 1.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  color: #cfe4dd;
+  text-decoration: none;
+  font-size: 0.93rem;
+}
+
+.nav a:hover,
+.nav a:focus {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.hero-text {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7fd6bf;
+}
+
+.hero h1 {
+  font-size: clamp(1.9rem, 5vw, 3rem);
+  line-height: 1.12;
+  margin: 0 0 1rem;
+  max-width: 18ch;
+}
+
+.lead {
+  max-width: 56ch;
+  font-size: 1.08rem;
+  color: #dcebe6;
+  margin: 0;
+}
+
+main {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 0;
+}
+
+section {
+  margin-bottom: 3.5rem;
+}
+
+h2 {
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  margin: 0 0 1.4rem;
+}
+
+h3 {
+  font-size: 1.02rem;
+  margin: 0 0 0.45rem;
+  color: var(--accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  gap: 1.1rem;
+}
+
+.grid article {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.grid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.wide {
+  max-width: 64ch;
+  color: var(--muted);
+  margin: 0 0 1.6rem;
+}
+
+.categories {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+  gap: 0.7rem;
+}
+
+.categories li {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.band {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.8rem 1.6rem;
+}
+
+.steps {
+  list-style: none;
+  counter-reset: step;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.3rem;
+}
+
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding-top: 2.4rem;
+}
+
+/* The number is decorative: screen readers already announce an ordered list. */
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.steps p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.note {
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+footer {
+  border-top: 1px solid var(--line);
+  margin-top: 1.5rem;
+}
+
+footer p {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 1.4rem 1.5rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* Narrow screens: the navigation centres and the hero loses its wide gutters. */
+@media (max-width: 680px) {
+  .nav {
+    justify-content: center;
+  }
+
+  .hero {
+    padding-bottom: 2.5rem;
+  }
+
+  main {
+    padding-top: 2rem;
+  }
+
+  .band {
+    padding: 1.3rem 1.1rem;
+  }
+}
