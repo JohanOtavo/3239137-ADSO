@@ -116,3 +116,101 @@ No column carries a `DEFAULT`: the domain supplies the values.
 
 Cross-cutting rules: **every timestamp is `timestamptz`**; there are **no audit columns**
 (`created_at`/`updated_at`) because no requirement asks for them.
+
+## 4. Constraints and indexes: where each rule lives
+
+| Rule | Object | Mark |
+|---|---|---|
+| Primary keys of the six tables | `PK_*` | **engine** |
+| `category.name` unique | unique index | **engine** |
+| `producer.document_number` unique | unique index | **engine** |
+| `user.username` unique | unique index | **engine** |
+| `model_code` unique among active rows | partial unique index `WHERE deleted_at IS NULL` | **engine** |
+| `equipment.category_id` to `category.id` RESTRICT | FK | **engine** |
+| `rental.producer_id` to `producer.id` RESTRICT | FK | **engine** |
+| `rental.rented_by_user_id` to `user.id` RESTRICT | FK | **engine** |
+| `rental_item.rental_id` to `rental.id` CASCADE | FK | **engine** |
+| `rental_item.equipment_id` to `equipment.id` RESTRICT | FK | **engine** |
+| `0 <= available_units <= total_units` | `ck_equipment_available_range` | **engine** - last line of defence for concurrency |
+| `total_units >= 1` | `ck_equipment_total_positive` | **engine** |
+| `role` in (`admin`,`advisor`) | `ck_user_role` | **engine** |
+| Unique `(rental_id, equipment_id)` | unique index | **engine** |
+| At most 2 items out per producer | - | **domain only** (not expressible in a `CHECK`) |
+| A producer with overdue items cannot rent | - | **domain only** |
+| Taking a unit and creating a line are one operation | - | **domain only** (one transaction) |
+| A rental has 1 or 2 lines | - | **domain only** |
+| Rentals and returns immutable except `returned_at` | - | **domain only** (by absence of an operation) |
+
+**No rule is left pending.** The three `CHECK` constraints land in the initial migration, not in a later one: a
+rule the engine can enforce and does not protects the application, not the data (article VI).
+
+Access indexes: `equipment (category_id, name)` partial over active rows; `rental (rented_at)`;
+`rental_item (equipment_id)`; `rental_item (due_at) WHERE returned_at IS NULL` for overdue lookups.
+
+## 5. Foreign key policy
+
+| # | FK | `ON DELETE` | Why |
+|---|---|---|---|
+| FK-1 | `equipment.category_id` | RESTRICT | A category with equipment is not deleted |
+| FK-2 | `rental_item.rental_id` | CASCADE | Composition: a line does not live without its rental (never fires: rentals are not deleted) |
+| FK-3 | `rental_item.equipment_id` | RESTRICT | Last line of defence: a manual delete cannot orphan the history |
+| FK-4 | `rental.producer_id` | RESTRICT | The producer on a rental does not disappear |
+| FK-5 | `rental.rented_by_user_id` | RESTRICT | Authorship is accounting data |
+
+`ON UPDATE NO ACTION` on all of them: keys are application UUIDs and never change.
+
+## 6. Access patterns
+
+| # | Pattern | Frequency |
+|---|---|---|
+| Q1 | Search equipment (text, category, active, ordered by name, paginated) | High |
+| Q2 | Equipment by id | High |
+| Q3 | Equipment by a batch of ids (before renting) | High, point of contention |
+| Q4 | List categories | High |
+| Q5 | Rental with its lines | Medium |
+| Q6 | Rentals by range, state and producer | High |
+| Q7 | Unreturned lines of a producer (count and overdue) | High, on every rental |
+| Q8 | Global overdue list | Medium |
+| Q9 | Report: most requested over a range | High, the most expensive |
+| Q10 | User by name | High, on every sign-in |
+
+## 7. Privacy and retention
+
+| Table | Attribute | Classification | Handling |
+|---|---|---|---|
+| `user` | `username` | Personal data | Restricted access |
+| `user` | `password_hash` | **Secret** | Never in logs or responses; never indexed |
+| `producer` | `full_name`, `document_number` | **Personal data** | `admin` and `advisor` only; **never** in the report or a public endpoint |
+| `rental`, `rental_item` | all | Commercial; `producer_id` is indirect personal data | Indefinite retention |
+| `equipment`, `category` | all | Public | Soft delete / no deletion |
+
+The report aggregates by equipment: it **exposes no producers and no advisors**.
+
+**Retention:** rentals and lines are never deleted; equipment is only soft deleted; the photo binary is the
+**only** data physically removed. Mandatory order: null `photo_key` and commit the transaction first, then delete
+the binary.
+
+## 8. Auditing
+
+The system carries **no** `created_at`/`updated_at`. Business instants already have a column: `rental.rented_at`,
+`rental_item.returned_at` and `equipment.deleted_at`. If a question like "who changed this name?" ever appears,
+the decision goes back to the owner.
+
+## 9. Seeding strategy
+
+The **five categories** ship in the initial migration with fixed identifiers:
+
+| `id` | `name` |
+|---|---|
+| `11111111-1111-4111-8111-111111111111` | Cámaras |
+| `22222222-2222-4222-8222-222222222222` | Lentes |
+| `33333333-3333-4333-8333-333333333333` | Drones |
+| `44444444-4444-4444-8444-444444444444` | Audio |
+| `55555555-5555-4555-8555-555555555555` | Estabilizadores |
+
+The names stay in Spanish because they are **text a user reads**: they appear verbatim in the catalogue and in
+the report (article XI).
+
+The **first administrator is not seeded by the database**: the application boot creates it from environment
+credentials, because only the hashing port can produce the hash. The demo seeder in `tool` goes through the
+**API**, never through direct SQL.
