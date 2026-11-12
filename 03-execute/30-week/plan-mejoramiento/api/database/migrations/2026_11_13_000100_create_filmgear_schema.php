@@ -80,6 +80,50 @@ return new class extends Migration
             $table->unique(['rental_id', 'equipment_id']);
             $table->index('equipment_id');
         });
+
+        $this->addEngineRules();
+    }
+
+    /**
+     * What the engine can enforce, the engine enforces (article VI).
+     *
+     * All three CHECK constraints land here rather than in a later migration:
+     * a rule the database could hold and does not protects the application,
+     * not the data.
+     */
+    private function addEngineRules(): void
+    {
+        DB::statement(
+            'alter table filmgear.equipment add constraint ck_equipment_available_range '
+            .'check (available_units >= 0 and available_units <= total_units)'
+        );
+
+        DB::statement(
+            'alter table filmgear.equipment add constraint ck_equipment_total_positive '
+            .'check (total_units >= 1)'
+        );
+
+        DB::statement(
+            "alter table filmgear.\"user\" add constraint ck_user_role "
+            ."check (role in ('admin', 'advisor'))"
+        );
+
+        // The model code is unique only among active equipment: retiring a
+        // piece frees its code for a new one (AC-03.2, ADR-003).
+        DB::statement(
+            'create unique index ux_equipment_model_code_active on filmgear.equipment (model_code) '
+            .'where deleted_at is null'
+        );
+
+        // The two most frequent access paths (data-model 4).
+        DB::statement(
+            'create index ix_equipment_category_name_active on filmgear.equipment (category_id, name) '
+            .'where deleted_at is null'
+        );
+        DB::statement(
+            'create index ix_rental_item_due_pending on filmgear.rental_item (due_at) '
+            .'where returned_at is null'
+        );
     }
 
     public function down(): void
