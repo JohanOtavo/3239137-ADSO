@@ -1,205 +1,204 @@
-# Modelo de datos — film-gear
+# Data model - film-gear
 
-**El único sitio donde vive el modelo de datos.** Quien implemente no necesita abrir el código ni conectarse al
-motor para saber qué hay, de qué tipo y con qué regla.
+**The only place the data model lives.** An implementer does not need to open the code or connect to the engine
+to know what exists, of what type and under which rule.
 
-- Motor de referencia: PostgreSQL 16. Esquema `filmgear`. Servidor en UTC.
-- Rige bajo [`constitution.md`](constitution.md) y [`spec.md`](spec.md). Si algo contradice a este documento, gana
-  este documento.
+- Reference engine: PostgreSQL 16. Schema `filmgear`. Server in UTC.
+- Governed by [`constitution.md`](constitution.md) and [`spec.md`](spec.md). If anything contradicts this
+  document, this document wins.
 
-Cada regla lleva una de **tres marcas**: **motor** (la impone la base), **solo dominio** (solo el código),
-**pendiente (T-xx)** (la pone esa tarea de [`tasks.md`](tasks.md)).
+Every rule carries one of **three marks**: **engine** (the database enforces it), **domain only** (code alone),
+**pending (T-xx)** (that task in [`tasks.md`](tasks.md) will apply it).
 
 ---
 
-## 0. Convención de nombres
+## 0. Naming convention
 
-| Elemento | Convención | Ejemplo |
+| Element | Convention | Example |
 |---|---|---|
-| Tabla | `snake_case`, inglés, **singular** | `rental_item` |
-| Columna | `snake_case`, inglés, singular, ASCII | `due_at` |
-| Restricción escrita a mano | `ck_{tabla}_{regla}` | `ck_equipment_available_range` |
-| Esquema | `filmgear` | `filmgear.rental` |
+| Table | `snake_case`, English, **singular** | `rental_item` |
+| Column | `snake_case`, English, singular, ASCII | `due_at` |
+| Hand-written constraint | `ck_{table}_{rule}` | `ck_equipment_available_range` |
+| Schema | `filmgear` | `filmgear.rental` |
 
-`user` se escribe `filmgear."user"` en SQL a mano; el constructor de consultas lo entrecomilla solo.
+`user` is written `filmgear."user"` in hand-written SQL; the query builder quotes it on its own.
 
-## 1. Glosario
+## 1. Glossary
 
-| Término | Definición | Dónde vive |
+| Term | Definition | Where it lives |
 |---|---|---|
-| **Equipo** | Modelo del catálogo, con marca, código de modelo, categoría, unidades y foto opcional | `equipment` |
-| **Categoría** | Clasificación fija de cinco, sembrada, sin mantenimiento | `category` |
-| **Unidad** | Copia física de un equipo. Se cuenta, no se identifica | `equipment.total_units`, `equipment.available_units` |
-| **Productor** | Quien alquila. No inicia sesión | `producer` |
-| **Alquiler** | Hecho consumado: quién pidió, quién lo registró y cuándo | `rental` |
-| **Línea de alquiler** | Un equipo dentro de un alquiler, con su vencimiento y su devolución | `rental_item` |
-| **Estado del alquiler** | `open`, `overdue` o `closed`. **Se calcula, no se almacena** | sin columna |
-| **Usuario** | Operador interno con rol `admin` o `advisor` | `user` |
-| **Congelado** | Copia del valor en el instante del alquiler; no sigue al catálogo | `rental_item.equipment_name`, `model_code`, `category_name` |
+| **Equipment** | A catalogue model, with brand, model code, category, units and an optional photo | `equipment` |
+| **Category** | A fixed classification of five, seeded, never maintained | `category` |
+| **Unit** | A physical copy of a piece of equipment. Counted, not identified | `equipment.total_units`, `equipment.available_units` |
+| **Producer** | The party that rents. Does not sign in | `producer` |
+| **Rental** | A settled fact: who asked, who recorded it and when | `rental` |
+| **Rental line** | One piece of equipment inside a rental, with its due date and its return | `rental_item` |
+| **Rental state** | `open`, `overdue` or `closed`. **Computed, never stored** | no column |
+| **User** | An internal operator with the `admin` or `advisor` role | `user` |
+| **Frozen** | A copy of the value at the instant of the rental; does not follow the catalogue | `rental_item.equipment_name`, `model_code`, `category_name` |
 
-## 2. Entidades y relaciones
+## 2. Entities and relationships
 
 ```mermaid
 erDiagram
-    category ||--o{ equipment    : "clasifica"
-    producer ||--o{ rental       : "pide"
-    user     ||--o{ rental       : "registra"
-    rental   ||--|{ rental_item  : "compone"
-    equipment||--o{ rental_item  : "alquilado en (FK RESTRICT)"
+    category ||--o{ equipment    : "classifies"
+    producer ||--o{ rental       : "requests"
+    user     ||--o{ rental       : "records"
+    rental   ||--|{ rental_item  : "composes"
+    equipment||--o{ rental_item  : "rented in (FK RESTRICT)"
 ```
 
-Seis entidades, seis tablas. No hay tabla de reporte, de tarifas ni de auditoría.
+Six entities, six tables. There is no report table, no rate table and no audit table.
 
-## 3. Modelo físico
+## 3. Physical model
 
-Ninguna columna lleva `DEFAULT`: los valores los pone el dominio.
+No column carries a `DEFAULT`: the domain supplies the values.
 
-**`category`** — semilla de solo lectura.
+**`category`** - read-only seed.
 
-| Columna | Tipo | Nulable | Nota |
+| Column | Type | Nullable | Note |
 |---|---|---|---|
-| `id` | `uuid` | no | PK. Identificadores literales (ver §9) |
-| `name` | `varchar(120)` | no | Único |
+| `id` | `uuid` | no | PK. Literal identifiers (see section 9) |
+| `name` | `varchar(120)` | no | Unique |
 
 **`equipment`**
 
-| Columna | Tipo | Nulable | Nota |
+| Column | Type | Nullable | Note |
 |---|---|---|---|
 | `id` | `uuid` | no | PK |
-| `name` | `varchar(200)` | no | Recortado por el dominio |
+| `name` | `varchar(200)` | no | Trimmed by the domain |
 | `brand` | `varchar(120)` | no | |
-| `model_code` | `varchar(20)` | no | De 4 a 20 caracteres `[A-Z0-9-]`. Único entre equipos activos (índice parcial) |
-| `category_id` | `uuid` | no | FK restrictiva a `category` |
-| `total_units` | `integer` | no | ≥ 1 |
-| `available_units` | `integer` | no | Entre 0 y `total_units` |
-| `photo_key` | `varchar(512)` | **sí** | Clave opaca; nunca ruta ni bytes; nunca cadena vacía |
-| `deleted_at` | `timestamptz` | sí | Baja lógica. Nula = activo |
+| `model_code` | `varchar(20)` | no | 4 to 20 characters of `[A-Z0-9-]`. Unique among active equipment (partial index) |
+| `category_id` | `uuid` | no | Restrictive FK to `category` |
+| `total_units` | `integer` | no | >= 1 |
+| `available_units` | `integer` | no | Between 0 and `total_units` |
+| `photo_key` | `varchar(512)` | **yes** | Opaque key; never a path, never bytes, never an empty string |
+| `deleted_at` | `timestamptz` | yes | Soft delete. Null means active |
 
 **`producer`**
 
-| Columna | Tipo | Nulable | Nota |
+| Column | Type | Nullable | Note |
 |---|---|---|---|
 | `id` | `uuid` | no | PK |
 | `full_name` | `varchar(200)` | no | |
-| `document_number` | `varchar(30)` | no | Único |
+| `document_number` | `varchar(30)` | no | Unique |
 
 **`rental`**
 
-| Columna | Tipo | Nulable | Nota |
+| Column | Type | Nullable | Note |
 |---|---|---|---|
 | `id` | `uuid` | no | PK |
-| `producer_id` | `uuid` | no | FK restrictiva a `producer` |
-| `rented_by_user_id` | `uuid` | no | FK restrictiva a `user` |
-| `rented_at` | `timestamptz` | no | Instante del alquiler |
+| `producer_id` | `uuid` | no | Restrictive FK to `producer` |
+| `rented_by_user_id` | `uuid` | no | Restrictive FK to `user` |
+| `rented_at` | `timestamptz` | no | The instant of the rental |
 
 **`rental_item`**
 
-| Columna | Tipo | Nulable | Nota |
+| Column | Type | Nullable | Note |
 |---|---|---|---|
 | `id` | `uuid` | no | PK |
-| `rental_id` | `uuid` | no | FK con `ON DELETE CASCADE` |
-| `equipment_id` | `uuid` | no | FK restrictiva a `equipment` |
-| `equipment_name` | `varchar(200)` | no | Congelado; mismo ancho que `equipment.name` |
-| `model_code` | `varchar(20)` | no | Congelado |
-| `category_name` | `varchar(120)` | no | Congelado; **sin FK a propósito** |
-| `due_at` | `timestamptz` | no | `rented_at` + 4 días, calculado por el dominio |
-| `returned_at` | `timestamptz` | **sí** | Nula mientras no se devuelve |
+| `rental_id` | `uuid` | no | FK with `ON DELETE CASCADE` |
+| `equipment_id` | `uuid` | no | Restrictive FK to `equipment` |
+| `equipment_name` | `varchar(200)` | no | Frozen; same width as `equipment.name` |
+| `model_code` | `varchar(20)` | no | Frozen |
+| `category_name` | `varchar(120)` | no | Frozen; **deliberately without a FK** |
+| `due_at` | `timestamptz` | no | `rented_at` + 4 days, computed by the domain |
+| `returned_at` | `timestamptz` | **yes** | Null until the line comes back |
 
 **`user`**
 
-| Columna | Tipo | Nulable | Nota |
+| Column | Type | Nullable | Note |
 |---|---|---|---|
 | `id` | `uuid` | no | PK |
-| `username` | `varchar(120)` | no | Único, minúsculas, recortado |
-| `password_hash` | `varchar(512)` | no | Nunca se indexa |
-| `role` | `varchar(40)` | no | `admin` o `advisor` |
+| `username` | `varchar(120)` | no | Unique, lowercase, trimmed |
+| `password_hash` | `varchar(512)` | no | Never indexed |
+| `role` | `varchar(40)` | no | `admin` or `advisor` |
 
-Reglas transversales: **todas las marcas de tiempo son `timestamptz`**; **no hay columnas de auditoría**
-(`created_at`/`updated_at`) porque ningún requisito las pide.
+Cross-cutting rules: **every timestamp is `timestamptz`**; there are **no audit columns**
+(`created_at`/`updated_at`) because no requirement asks for them.
 
-## 4. Restricciones e índices: dónde vive cada regla
+## 4. Constraints and indexes: where each rule lives
 
-| Regla | Objeto | Marca |
+| Rule | Object | Mark |
 |---|---|---|
-| Claves primarias de las seis tablas | `PK_*` | **motor** |
-| `category.name` único | índice único | **motor** |
-| `producer.document_number` único | índice único | **motor** |
-| `user.username` único | índice único | **motor** |
-| `model_code` único entre activos | índice único parcial `WHERE deleted_at IS NULL` | **motor** |
-| `equipment.category_id` → `category.id` RESTRICT | FK | **motor** |
-| `rental.producer_id` → `producer.id` RESTRICT | FK | **motor** |
-| `rental.rented_by_user_id` → `user.id` RESTRICT | FK | **motor** |
-| `rental_item.rental_id` → `rental.id` CASCADE | FK | **motor** |
-| `rental_item.equipment_id` → `equipment.id` RESTRICT | FK | **motor** |
-| `0 <= available_units <= total_units` | `ck_equipment_available_range` | **motor** — última barrera de concurrencia |
-| `total_units >= 1` | `ck_equipment_total_positive` | **motor** |
-| `role` en (`admin`,`advisor`) | `ck_user_role` | **motor** |
-| Único `(rental_id, equipment_id)` | índice único | **motor** |
-| Máximo 2 sin devolver por productor | — | **solo dominio** (no expresable en un `CHECK`) |
-| Productor con vencidos no alquila | — | **solo dominio** |
-| Descontar unidad y crear línea son una operación | — | **solo dominio** (una transacción) |
-| Un alquiler tiene 1 o 2 líneas | — | **solo dominio** |
-| Alquileres y devoluciones inmutables salvo `returned_at` | — | **solo dominio** (por ausencia de operación) |
+| Primary keys of the six tables | `PK_*` | **engine** |
+| `category.name` unique | unique index | **engine** |
+| `producer.document_number` unique | unique index | **engine** |
+| `user.username` unique | unique index | **engine** |
+| `model_code` unique among active rows | partial unique index `WHERE deleted_at IS NULL` | **engine** |
+| `equipment.category_id` to `category.id` RESTRICT | FK | **engine** |
+| `rental.producer_id` to `producer.id` RESTRICT | FK | **engine** |
+| `rental.rented_by_user_id` to `user.id` RESTRICT | FK | **engine** |
+| `rental_item.rental_id` to `rental.id` CASCADE | FK | **engine** |
+| `rental_item.equipment_id` to `equipment.id` RESTRICT | FK | **engine** |
+| `0 <= available_units <= total_units` | `ck_equipment_available_range` | **engine** - last line of defence for concurrency |
+| `total_units >= 1` | `ck_equipment_total_positive` | **engine** |
+| `role` in (`admin`,`advisor`) | `ck_user_role` | **engine** |
+| Unique `(rental_id, equipment_id)` | unique index | **engine** |
+| At most 2 items out per producer | - | **domain only** (not expressible in a `CHECK`) |
+| A producer with overdue items cannot rent | - | **domain only** |
+| Taking a unit and creating a line are one operation | - | **domain only** (one transaction) |
+| A rental has 1 or 2 lines | - | **domain only** |
+| Rentals and returns immutable except `returned_at` | - | **domain only** (by absence of an operation) |
 
-**Ninguna regla queda marcada como pendiente.** Las tres restricciones `CHECK` entran en la migración inicial, no
-en una posterior: una regla que el motor puede imponer y no impone protege a la aplicación, no a los datos
-(artículo VI).
+**No rule is left pending.** The three `CHECK` constraints land in the initial migration, not in a later one: a
+rule the engine can enforce and does not protects the application, not the data (article VI).
 
-Índices de acceso: `equipment (category_id, name)` parcial sobre activos; `rental (rented_at)`;
-`rental_item (equipment_id)`; `rental_item (due_at) WHERE returned_at IS NULL` para vencidos.
+Access indexes: `equipment (category_id, name)` partial over active rows; `rental (rented_at)`;
+`rental_item (equipment_id)`; `rental_item (due_at) WHERE returned_at IS NULL` for overdue lookups.
 
-## 5. Política de claves foráneas
+## 5. Foreign key policy
 
-| # | FK | `ON DELETE` | Por qué |
+| # | FK | `ON DELETE` | Why |
 |---|---|---|---|
-| FK-1 | `equipment.category_id` | RESTRICT | Una categoría con equipos no se elimina |
-| FK-2 | `rental_item.rental_id` | CASCADE | Composición: la línea no vive sin su alquiler (nunca se dispara: no se borran alquileres) |
-| FK-3 | `rental_item.equipment_id` | RESTRICT | Barrera de última instancia: un borrado manual no puede huerfanar el histórico |
-| FK-4 | `rental.producer_id` | RESTRICT | El productor de un alquiler no desaparece |
-| FK-5 | `rental.rented_by_user_id` | RESTRICT | La autoría es un dato contable |
+| FK-1 | `equipment.category_id` | RESTRICT | A category with equipment is not deleted |
+| FK-2 | `rental_item.rental_id` | CASCADE | Composition: a line does not live without its rental (never fires: rentals are not deleted) |
+| FK-3 | `rental_item.equipment_id` | RESTRICT | Last line of defence: a manual delete cannot orphan the history |
+| FK-4 | `rental.producer_id` | RESTRICT | The producer on a rental does not disappear |
+| FK-5 | `rental.rented_by_user_id` | RESTRICT | Authorship is accounting data |
 
-`ON UPDATE NO ACTION` en todas: las claves son UUID de la aplicación y no cambian.
+`ON UPDATE NO ACTION` on all of them: keys are application UUIDs and never change.
 
-## 6. Patrones de acceso
+## 6. Access patterns
 
-| # | Patrón | Frecuencia |
+| # | Pattern | Frequency |
 |---|---|---|
-| Q1 | Buscar equipos (texto, categoría, activos, orden por nombre, paginado) | Alta |
-| Q2 | Equipo por id | Alta |
-| Q3 | Equipos por lote de ids (antes de alquilar) | Alta, punto de contención |
-| Q4 | Listar categorías | Alta |
-| Q5 | Alquiler con sus líneas | Media |
-| Q6 | Alquileres por rango, estado y productor | Alta |
-| Q7 | Líneas sin devolver de un productor (cuenta y vencidos) | Alta, en cada alquiler |
-| Q8 | Vencidos globales | Media |
-| Q9 | Reporte: más solicitados por rango | Alta, la más costosa |
-| Q10 | Usuario por nombre | Alta, en cada inicio de sesión |
+| Q1 | Search equipment (text, category, active, ordered by name, paginated) | High |
+| Q2 | Equipment by id | High |
+| Q3 | Equipment by a batch of ids (before renting) | High, point of contention |
+| Q4 | List categories | High |
+| Q5 | Rental with its lines | Medium |
+| Q6 | Rentals by range, state and producer | High |
+| Q7 | Unreturned lines of a producer (count and overdue) | High, on every rental |
+| Q8 | Global overdue list | Medium |
+| Q9 | Report: most requested over a range | High, the most expensive |
+| Q10 | User by name | High, on every sign-in |
 
-## 7. Privacidad y retención
+## 7. Privacy and retention
 
-| Tabla | Atributo | Clasificación | Manejo |
+| Table | Attribute | Classification | Handling |
 |---|---|---|---|
-| `user` | `username` | Dato personal | Acceso restringido |
-| `user` | `password_hash` | **Secreto** | Jamás en logs ni respuestas; nunca se indexa |
-| `producer` | `full_name`, `document_number` | **Dato personal** | Solo `admin` y `advisor`; **nunca** en el reporte ni en endpoints públicos |
-| `rental`, `rental_item` | todos | Comerciales; `producer_id` es dato personal indirecto | Retención indefinida |
-| `equipment`, `category` | todos | Públicos | Baja lógica / sin borrado |
+| `user` | `username` | Personal data | Restricted access |
+| `user` | `password_hash` | **Secret** | Never in logs or responses; never indexed |
+| `producer` | `full_name`, `document_number` | **Personal data** | `admin` and `advisor` only; **never** in the report or a public endpoint |
+| `rental`, `rental_item` | all | Commercial; `producer_id` is indirect personal data | Indefinite retention |
+| `equipment`, `category` | all | Public | Soft delete / no deletion |
 
-El reporte agrega por equipo: **no expone productores ni asesores**.
+The report aggregates by equipment: it **exposes no producers and no advisors**.
 
-**Retención:** alquileres y líneas nunca se borran; equipos solo baja lógica; el binario de la foto es el **único**
-dato que se borra físicamente. Orden obligatorio: primero se anula `photo_key` y se confirma la transacción;
-después se borra el binario.
+**Retention:** rentals and lines are never deleted; equipment is only soft deleted; the photo binary is the
+**only** data physically removed. Mandatory order: null `photo_key` and commit the transaction first, then delete
+the binary.
 
-## 8. Auditoría
+## 8. Auditing
 
-El sistema **no** lleva `created_at`/`updated_at`. Los instantes de negocio ya tienen columna: `rental.rented_at`,
-`rental_item.returned_at` y `equipment.deleted_at`. Si aparece una pregunta del tipo «¿quién cambió este
-nombre?», la decisión vuelve al propietario.
+The system carries **no** `created_at`/`updated_at`. Business instants already have a column: `rental.rented_at`,
+`rental_item.returned_at` and `equipment.deleted_at`. If a question like "who changed this name?" ever appears,
+the decision goes back to the owner.
 
-## 9. Estrategia de semilla
+## 9. Seeding strategy
 
-Las **cinco categorías** van en la migración inicial, con identificadores fijos:
+The **five categories** ship in the initial migration with fixed identifiers:
 
 | `id` | `name` |
 |---|---|
@@ -209,47 +208,47 @@ Las **cinco categorías** van en la migración inicial, con identificadores fijo
 | `44444444-4444-4444-8444-444444444444` | Audio |
 | `55555555-5555-4555-8555-555555555555` | Estabilizadores |
 
-Los nombres van en español porque son **texto que ve el usuario**, no identificadores: aparecen tal cual en el
-catálogo y en el reporte (artículo XI).
+The names stay in Spanish because they are **text a user reads**: they appear verbatim in the catalogue and in
+the report (article XI).
 
-El **administrador inicial no lo siembra la base**: lo crea el arranque de la aplicación con credenciales de
-entorno, porque el hash solo puede producirlo el puerto de hash. El sembrador de datos de demostración (`tool`)
-usa la **API**, nunca SQL directo.
+The **first administrator is not seeded by the database**: the application boot creates it from environment
+credentials, because only the hashing port can produce the hash. The demo seeder in `tool` goes through the
+**API**, never through direct SQL.
 
-## 10. Cómo se comprueba que este documento no miente
+## 10. How to check this document is not lying
 
 ```sql
--- Debe devolver las columnas de §3, sin ningún DEFAULT
+-- Must return the columns of section 3, with no DEFAULT anywhere
 SELECT table_name, ordinal_position, column_name, data_type, is_nullable, column_default
 FROM information_schema.columns WHERE table_schema = 'filmgear' ORDER BY 1, 2;
 
--- No debe devolver ninguna fila: no hay columnas de auditoría ni estado almacenado
+-- Must return no rows: no audit columns and no stored state
 SELECT table_name, column_name FROM information_schema.columns
 WHERE table_schema = 'filmgear' AND column_name IN ('created_at', 'updated_at', 'status', 'days_late');
 
--- Restricciones: PK, FK y CHECK
+-- Constraints: PK, FK and CHECK
 SELECT c.conrelid::regclass, c.conname, c.contype::text, pg_get_constraintdef(c.oid)
 FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
 WHERE n.nspname = 'filmgear' ORDER BY 1, 3, 2;
 
--- Índices
+-- Indexes
 SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'filmgear' ORDER BY 1, 2;
 ```
 
-Si una regla marcada **motor** no aparece, alguien la borró. Si una marcada **solo dominio** aparece, ya se bajó y
-hay que reclasificarla. Gana el motor: el documento está roto y se corrige el documento.
+If a rule marked **engine** is missing, somebody dropped it. If a rule marked **domain only** shows up, it has
+been pushed down and needs reclassifying. The engine wins: the document is broken and the document gets fixed.
 
-Las tres restricciones `CHECK` se comprueban además rompiéndolas a mano, que es la evidencia que pide el
-artículo XII:
+The three `CHECK` constraints are additionally verified by breaking them by hand, which is the evidence article
+XII asks for:
 
 ```sql
--- Las tres deben fallar
+-- All three must fail
 INSERT INTO filmgear.equipment (id, name, brand, model_code, category_id, total_units, available_units, photo_key, deleted_at)
-VALUES ('99999999-9999-4999-8999-999999999999', 'Roto', 'X', 'ROTO-01', '11111111-1111-4111-8111-111111111111', 0, 0, NULL, NULL);
+VALUES ('99999999-9999-4999-8999-999999999999', 'Broken', 'X', 'BROKEN-01', '11111111-1111-4111-8111-111111111111', 0, 0, NULL, NULL);
 
 INSERT INTO filmgear.equipment (id, name, brand, model_code, category_id, total_units, available_units, photo_key, deleted_at)
-VALUES ('99999999-9999-4999-8999-999999999998', 'Roto', 'X', 'ROTO-02', '11111111-1111-4111-8111-111111111111', 1, 5, NULL, NULL);
+VALUES ('99999999-9999-4999-8999-999999999998', 'Broken', 'X', 'BROKEN-02', '11111111-1111-4111-8111-111111111111', 1, 5, NULL, NULL);
 
 INSERT INTO filmgear."user" (id, username, password_hash, role)
-VALUES ('88888888-8888-4888-8888-888888888888', 'roto', 'x', 'superadmin');
+VALUES ('88888888-8888-4888-8888-888888888888', 'broken', 'x', 'superadmin');
 ```
