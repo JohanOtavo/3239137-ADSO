@@ -275,3 +275,33 @@ footer p {
     padding: 1.3rem 1.1rem;
   }
 }
+
+/* A visible ring on every focusable element, not just links: keyboard users
+   need to know where they are, and the default outline disappears on dark
+   backgrounds. */
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid #7fd6bf;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.hero a:focus-visible {
+  outline-color: #fff;
+}
+
+/* Respect the system setting: the gradient and transitions are decorative. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Long model names and brand names must not spill out of their card. */
+.grid article,
+.categories li,
+.steps li {
+  overflow-wrap: anywhere;
+}
