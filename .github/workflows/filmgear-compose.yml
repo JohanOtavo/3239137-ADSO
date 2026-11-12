@@ -1,0 +1,40 @@
+name: filmgear compose
+
+# Scoped with paths so this workflow only runs for the improvement plan folder
+# and never fires for the rest of the course repository.
+on:
+  push:
+    paths:
+      - '03-execute/30-week/plan-mejoramiento/infra/**'
+      - '03-execute/30-week/plan-mejoramiento/api/**'
+      - '.github/workflows/filmgear-compose.yml'
+  pull_request:
+    paths:
+      - '03-execute/30-week/plan-mejoramiento/infra/**'
+      - '03-execute/30-week/plan-mejoramiento/api/**'
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03-execute/30-week/plan-mejoramiento/infra
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Provide the environment the compose file expects
+        run: cp .env.example .env
+
+      - name: Validate the compose file
+        run: docker compose config --quiet
+
+      # Article V: infra starts an empty engine. The schema belongs to the
+      # migrations, so a CREATE TABLE in this folder is a contract breach.
+      - name: Assert no DDL lives in infra
+        run: |
+          if grep -ril "create table" . ; then
+            echo "infra must not contain DDL: the schema belongs to the migrations (article V, ADR-001)"
+            exit 1
+          fi
+          echo "no DDL in infra"
