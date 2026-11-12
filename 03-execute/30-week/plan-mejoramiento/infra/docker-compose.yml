@@ -1,0 +1,64 @@
+# film-gear - one command brings the whole stack up (NFR-5, T-20).
+#
+# The engine starts EMPTY: there is not a single CREATE TABLE here. The schema
+# is created by the API's migrations at boot (article V, ADR-001).
+name: filmgear
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: UTC
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - filmgear
+    healthcheck:
+      # The API waits for the engine to accept connections; without this the
+      # first migration loses a startup race.
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ../api
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "false"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SCHEMA: filmgear
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      LOG_CHANNEL: stderr
+    ports:
+      - "8000:8000"
+    volumes:
+      # Photos survive a container recreate.
+      - photos:/app/storage/app/photos
+    networks:
+      - filmgear
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  photos:
+
+networks:
+  filmgear:
+    driver: bridge
