@@ -1,18 +1,18 @@
-# ADR-004 · Reporte agregado sobre valores congelados
+# ADR-004 - Aggregated report over frozen values
 
-- **Estado:** aceptada
-- **Contexto:** el reporte de equipos más solicitados tiene que ser **estable**: un periodo cerrado no puede
-  cambiar porque alguien renombre un equipo o mueva su categoría (CA-10.4). Si el reporte lee el catálogo vivo,
-  el informe de noviembre cambia en diciembre.
-- **Decisión:** la línea de alquiler **congela** `equipment_name`, `model_code` y `category_name` en el instante
-  de la operación, y el reporte agrupa por esos valores, nunca por el catálogo. `rental_item.category_name` va
-  **sin clave foránea a propósito**: no es una referencia, es una copia. El reporte se resuelve con una sola
-  consulta agregada detrás del puerto `MostRequestedQuery`, no recorriendo entidades.
-- **Alternativas descartadas:** leer el nombre actual del catálogo con un `JOIN`, que es justo lo que hace
-  inestable el reporte; una tabla de reporte materializada, que hay que mantener y puede quedar desincronizada;
-  versionar el catálogo con fechas de vigencia, que resuelve el mismo problema con diez veces más modelo.
-- **Consecuencias:** hay duplicación deliberada entre `equipment` y `rental_item`, y es correcta: son dos hechos
-  distintos, lo que el equipo es hoy y lo que era cuando se alquiló. El reporte no expone productores ni asesores
-  (CA-10.3) porque agrega por equipo y no los consulta.
-- **Cómo se verifica:** una prueba alquila un equipo, lo renombra después y comprueba que el reporte sigue
-  devolviendo el nombre viejo.
+- **Status:** accepted
+- **Context:** the most-requested report has to be **stable**: a closed period cannot change because somebody
+  renames a piece of equipment or moves its category (AC-10.4). If the report reads the live catalogue,
+  November's figures change in December.
+- **Decision:** the rental line **freezes** `equipment_name`, `model_code` and `category_name` at the instant of
+  the operation, and the report groups by those values, never by the catalogue. `rental_item.category_name`
+  carries **no foreign key on purpose**: it is not a reference, it is a copy. The report resolves in a single
+  aggregated query behind the `MostRequestedQuery` port, not by walking entities.
+- **Alternatives rejected:** reading the current name from the catalogue with a `JOIN`, which is exactly what
+  makes the report unstable; a materialised report table, which has to be maintained and can drift; versioning
+  the catalogue with validity dates, which solves the same problem with ten times the model.
+- **Consequences:** there is deliberate duplication between `equipment` and `rental_item`, and it is correct:
+  they are two different facts, what the equipment is today and what it was when it went out. The report exposes
+  no producers and no advisors (AC-10.3) because it aggregates by equipment and never queries them.
+- **How it is checked:** a test rents a piece of equipment, renames it afterwards, and asserts the report still
+  returns the old name.

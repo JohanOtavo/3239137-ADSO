@@ -1,17 +1,17 @@
-# ADR-003 · Baja lógica del catálogo, sin borrado físico
+# ADR-003 - Soft delete for the catalogue, no physical removal
 
-- **Estado:** aceptada
-- **Contexto:** un equipo se retira del catálogo cuando se vende, se pierde o se rompe. Pero ese equipo aparece en
-  alquileres pasados, y esos alquileres no se borran nunca (RN-5). Si la fila desaparece, el histórico queda
-  huérfano y el reporte miente.
-- **Decisión:** `equipment.deleted_at`. Nula significa activo. Un equipo dado de baja deja de aparecer en el
-  catálogo y en las búsquedas, pero sigue existiendo para las líneas de alquiler que lo referencian. Un equipo con
-  alquileres abiertos **no se da de baja**: responde 409 `EQUIPMENT_HAS_OPEN_RENTALS` (CA-03.5).
-- **Alternativas descartadas:** borrado físico con `ON DELETE SET NULL` en la línea, que pierde qué se alquiló;
-  una tabla de archivo aparte, que duplica el modelo y obliga a consultar en dos sitios; una columna `active`
-  booleana, que no dice cuándo se retiró.
-- **Consecuencias:** toda consulta del catálogo lleva `WHERE deleted_at IS NULL`, y el índice único del
-  `model_code` es **parcial** sobre esa misma condición: retirar un equipo libera su código para uno nuevo. La FK
-  `rental_item.equipment_id` es RESTRICT, como barrera de última instancia contra un borrado manual.
-- **Cómo se verifica:** una prueba da de baja un equipo y comprueba que desaparece del catálogo, que
-  `GET /equipment/{id}` responde 404, y que la línea de alquiler que lo referencia sigue devolviendo sus datos.
+- **Status:** accepted
+- **Context:** equipment leaves the catalogue when it is sold, lost or broken. But that equipment appears in past
+  rentals, and rentals are never deleted (BR-5). If the row disappears, the history is orphaned and the report
+  lies.
+- **Decision:** `equipment.deleted_at`. Null means active. Soft-deleted equipment stops appearing in the
+  catalogue and in searches, but still exists for the rental lines that reference it. Equipment with open rentals
+  **cannot be soft deleted**: it answers 409 `EQUIPMENT_HAS_OPEN_RENTALS` (AC-03.5).
+- **Alternatives rejected:** physical delete with `ON DELETE SET NULL` on the line, which loses what was rented;
+  a separate archive table, which duplicates the model and forces every query to look in two places; a boolean
+  `active` column, which does not record when the equipment was retired.
+- **Consequences:** every catalogue query carries `WHERE deleted_at IS NULL`, and the unique index on
+  `model_code` is **partial** over that same condition: retiring equipment frees its code for a new one. The
+  `rental_item.equipment_id` foreign key is RESTRICT, as a last line of defence against a manual delete.
+- **How it is checked:** a test soft deletes equipment and asserts it disappears from the catalogue, that
+  `GET /equipment/{id}` answers 404, and that the rental line referencing it still returns its data.
