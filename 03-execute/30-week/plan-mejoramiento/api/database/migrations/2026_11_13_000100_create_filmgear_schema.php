@@ -82,6 +82,7 @@ return new class extends Migration
         });
 
         $this->addEngineRules();
+        $this->seedCategories();
     }
 
     /**
@@ -124,6 +125,21 @@ return new class extends Migration
             'create index ix_rental_item_due_pending on filmgear.rental_item (due_at) '
             .'where returned_at is null'
         );
+    }
+
+    /** The five categories, with fixed identifiers (data-model 9). */
+    private function seedCategories(): void
+    {
+        // The names stay in Spanish: they are rendered verbatim in the
+        // catalogue and in the report, so they are text a user reads, not
+        // identifiers (article XI).
+        DB::table('filmgear.category')->insert([
+            ['id' => '11111111-1111-4111-8111-111111111111', 'name' => 'Cámaras'],
+            ['id' => '22222222-2222-4222-8222-222222222222', 'name' => 'Lentes'],
+            ['id' => '33333333-3333-4333-8333-333333333333', 'name' => 'Drones'],
+            ['id' => '44444444-4444-4444-8444-444444444444', 'name' => 'Audio'],
+            ['id' => '55555555-5555-4555-8555-555555555555', 'name' => 'Estabilizadores'],
+        ]);
     }
 
     public function down(): void
