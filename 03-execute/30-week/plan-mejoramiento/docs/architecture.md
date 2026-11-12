@@ -1,104 +1,104 @@
-# Arquitectura — film-gear
+# Architecture - film-gear
 
-La forma del sistema. Las decisiones están en [`plan.md`](plan.md); el esquema, en
+The shape of the system. The decisions are in [`plan.md`](plan.md); the schema, in
 [`data-model.md`](data-model.md).
 
-## 1. Las capas y la dirección de las dependencias
+## 1. The layers and the direction of the dependencies
 
 ```
-        HTTP / consola
+        HTTP / console
               │
     ┌─────────▼──────────┐
-    │     Adapters       │  Laravel, PostgreSQL, disco, JWT
+    │     Adapters       │  Laravel, PostgreSQL, disk, JWT
     └─────────┬──────────┘
-              │ implementa
+              │ implements
     ┌─────────▼──────────┐
-    │    Application     │  Casos de uso + los puertos que declara
+    │    Application     │  Use cases plus the ports they declare
     └─────────┬──────────┘
-              │ usa
+              │ uses
     ┌─────────▼──────────┐
-    │      Domain        │  Entidades, objetos de valor, reglas
-    └────────────────────┘      no importa nada
+    │      Domain        │  Entities, value objects, rules
+    └────────────────────┘      imports nothing
 ```
 
-Las flechas apuntan hacia adentro y **nunca** al revés.
+The arrows point inward and **never** the other way.
 
-| Carpeta | Qué vive ahí | Qué puede importar |
+| Folder | What lives there | What it may import |
 |---|---|---|
-| `api/app/Domain/` | `Equipment`, `Rental`, `RentalItem`, `Producer`, `User`, objetos de valor | Solo PHP (artículo I) |
-| `api/app/Application/` | Un caso de uso por archivo, y los puertos | Solo el dominio (artículo II) |
-| `api/app/Adapters/` | Persistencia, seguridad, fotos, HTTP, consola | Lo que haga falta |
-| `api/app/Providers/` | `PortBindingsProvider`: el único punto de composición | Todo (artículo III) |
+| `api/app/Domain/` | `Equipment`, `Rental`, `RentalItem`, `Producer`, `User`, value objects | PHP only (article I) |
+| `api/app/Application/` | One use case per file, and the ports | The domain only (article II) |
+| `api/app/Adapters/` | Persistence, security, photos, HTTP, console | Whatever it needs |
+| `api/app/Providers/` | `PortBindingsProvider`: the single composition root | Everything (article III) |
 
-`api/tests/Architecture/LayerDependenciesTest.php` lee los `use` de cada archivo y falla si alguien invierte una
-flecha. Es el contrato escrito como prueba, porque PHP no tiene una herramienta equivalente a `import-linter`.
+`api/tests/Architecture/LayerDependenciesTest.php` reads the `use` statements of every file and fails when
+somebody flips an arrow. It is the contract written as a test, because PHP has no equivalent of `import-linter`.
 
-## 2. Los puertos
+## 2. The ports
 
-La aplicación declara lo que necesita del exterior y no sabe quién lo cumple:
+The application declares what it needs from outside and does not know who satisfies it:
 
-| Puerto | Para qué | Adaptador |
+| Port | For what | Adapter |
 |---|---|---|
-| `Clock` | Saber qué hora es | Reloj del sistema, en UTC |
+| `Clock` | Knowing the time | System clock, in UTC |
 | `IdGenerator` | UUID v4 | `random_bytes` |
-| `PasswordHasher` | Hash y verificación | Argon2id nativo |
-| `TokenIssuer` | Emitir y verificar el token | JWT HS256 |
-| `PhotoStorage` | Guardar y leer el binario | Disco local |
-| `TransactionManager` | Agrupar escrituras en una operación | Transacción de PostgreSQL |
-| `EquipmentRepository` | Catálogo | Constructor de consultas |
-| `ProducerRepository` | Productores y sus conteos | Constructor de consultas |
-| `RentalRepository` | Alquileres y sus líneas | Constructor de consultas |
-| `UserRepository` | Usuarios | Constructor de consultas |
-| `CategoryRepository` | Las cinco categorías | Constructor de consultas |
-| `MostRequestedQuery` | El reporte, de un tirón | Una consulta agregada |
+| `PasswordHasher` | Hashing and verifying | Native Argon2id |
+| `TokenIssuer` | Issuing and verifying the token | JWT HS256 |
+| `PhotoStorage` | Storing and reading the binary | Local disk |
+| `TransactionManager` | Grouping writes into one operation | PostgreSQL transaction |
+| `EquipmentRepository` | The catalogue | Query builder |
+| `ProducerRepository` | Producers and their counts | Query builder |
+| `RentalRepository` | Rentals and their lines | Query builder |
+| `UserRepository` | Users | Query builder |
+| `CategoryRepository` | The five categories | Query builder |
+| `MostRequestedQuery` | The report, in one go | One aggregated query |
 
-Cambiar el disco de fotos por S3 es escribir un adaptador nuevo y cambiar una línea en
-`PortBindingsProvider`. Ni el dominio ni los casos de uso se enteran: eso es el OCP del artículo IV.
+Swapping disk photo storage for S3 means writing a new adapter and changing one line in
+`PortBindingsProvider`. Neither the domain nor the use cases notice: that is the OCP of article IV.
 
-## 3. El recorrido de una operación: alquilar
+## 3. Walking through one operation: renting
 
-`POST /rentals` con un productor y dos equipos.
+`POST /rentals` with one producer and two pieces of equipment.
 
 ```
-Controlador          valida la forma del JSON y saca el usuario del token
+Controller            validates the JSON shape and reads the user from the token
    │
-RentEquipmentService dentro de una transacción:
-   │                   1. ¿existe el productor?                      → 404
-   │                   2. ¿cuántos equipos tiene sin devolver?       → 422 si pasa de 2
-   │                   3. ¿tiene alguno vencido?                     → 409
-   │                   4. por cada equipo:
-   │                        lee el equipo                            → 404 si no está activo
-   │                        Equipment::withdraw() decide si hay unidad → 409 si no
-   │                        escritura condicionada en la base        → 409 si otro ganó
-   │                        Rental::addItem() congela nombre, código y categoría
-   │                   5. guarda el alquiler con sus líneas
+RentEquipmentService  inside a transaction:
+   │                    1. does the producer exist?                   → 404
+   │                    2. how many items does it already hold?       → 422 over 2
+   │                    3. does it hold anything overdue?             → 409
+   │                    4. for each piece of equipment:
+   │                         read it                                  → 404 if not active
+   │                         Equipment::withdraw() decides if a unit is free → 409 if not
+   │                         conditional write to the database        → 409 if somebody won first
+   │                         Rental::addItem() freezes name, code and category
+   │                    5. stores the rental with its lines
    │
-Presentador          calcula el estado con el reloj y arma la respuesta
+Presenter             computes the state with the clock and builds the response
 ```
 
-Si cualquier paso falla, la transacción no deja nada escrito. Es lo que pide CA-06.3: sin unidades, **no se
-registra nada**.
+If any step fails, the transaction leaves nothing written. That is what AC-06.3 asks for: with no units,
+**nothing is recorded**.
 
-El paso 4 es el único punto de contención del sistema. La decisión de si queda unidad la toma el dominio; quién
-gana cuando dos asesores piden la última a la vez lo decide la base, con un `UPDATE` que lleva
-`WHERE available_units = <lo que se leyó>`. Cero filas afectadas significa que otro llegó primero, y el servidor
-responde 409 ([ADR-002](adr/adr-002-concurrencia-optimista.md)).
+Step 4 is the only point of contention in the system. Whether a unit is free is decided by the domain; who wins
+when two advisors ask for the last one is decided by the database, with an `UPDATE` carrying
+`WHERE available_units = <what was read>`. Zero rows affected means somebody got there first, and the server
+answers 409 ([ADR-002](adr/adr-002-optimistic-concurrency.md)).
 
-## 4. Las seis carpetas y su papel
+## 4. The six folders and their job
 
-| Carpeta | Papel | Se prueba con |
+| Folder | Job | Checked by |
 |---|---|---|
-| `docs` | La especificación | Que esta lectura baste para construir |
-| `api` | Reglas de negocio y contrato HTTP | Pruebas de dominio, aplicación, contrato, concurrencia y carga |
-| `app` | Pantallas de operación | Un recorrido de punta a punta: entrar → alquilar → devolver → reporte |
-| `page` | Presentación pública, sin llamar a la API | Que se vea bien en móvil y escritorio |
-| `infra` | `docker compose up` y la base vacía | Que arranca con un solo comando |
-| `tool` | Datos de demostración y la guardia de idioma | Que la sustentación tenga datos reales |
+| `docs` | The specification | Whether reading it is enough to build |
+| `api` | Business rules and HTTP contract | Domain, application, contract, concurrency and load tests |
+| `app` | Operating screens | An end-to-end run: sign in, rent, return, report |
+| `page` | Public presentation, no API calls | Reading well on phone and desktop |
+| `infra` | `docker compose up` and an empty database | Starting with one command |
+| `tool` | Demo data and the language guard | Having real data at the defence |
 
-## 5. Las cinco ideas que sostienen el diseño
+## 5. The five ideas holding the design together
 
-1. **El alquiler es un hecho inmutable**; solo cambia `returned_at` de una línea.
-2. **Las unidades se descuentan y se devuelven dentro de la misma operación** que crea o cierra la línea.
-3. **El estado se calcula**: `open`, `overdue` o `closed` no están en la base.
-4. **Lo congelado no sigue al catálogo**: el reporte de noviembre no cambia porque en diciembre se renombre un equipo.
-5. **La base es la última barrera**: si el `CHECK` de unidades salta, algo escribió fuera del sistema.
+1. **A rental is an immutable fact**; only `returned_at` on a line ever changes.
+2. **Units are taken and returned inside the same operation** that creates or closes the line.
+3. **State is computed**: `open`, `overdue` and `closed` are not in the database.
+4. **Frozen values do not follow the catalogue**: November's report does not change when equipment is renamed in December.
+5. **The database is the last line of defence**: if the units `CHECK` fires, something wrote outside the system.
