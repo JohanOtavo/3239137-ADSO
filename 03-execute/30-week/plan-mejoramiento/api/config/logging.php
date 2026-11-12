@@ -1,0 +1,23 @@
+<?php
+
+use Monolog\Handler\StreamHandler;
+
+return [
+    'default' => env('LOG_CHANNEL', 'stderr'),
+
+    'channels' => [
+        // Containers collect stdout and stderr, so logging to a file inside the
+        // image would hide everything the operator needs to see.
+        'stderr' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => StreamHandler::class,
+            'with' => ['stream' => 'php://stderr'],
+        ],
+        'single' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+        ],
+    ],
+];
