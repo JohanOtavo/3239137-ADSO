@@ -214,3 +214,41 @@ the report (article XI).
 The **first administrator is not seeded by the database**: the application boot creates it from environment
 credentials, because only the hashing port can produce the hash. The demo seeder in `tool` goes through the
 **API**, never through direct SQL.
+
+## 10. How to check this document is not lying
+
+```sql
+-- Must return the columns of section 3, with no DEFAULT anywhere
+SELECT table_name, ordinal_position, column_name, data_type, is_nullable, column_default
+FROM information_schema.columns WHERE table_schema = 'filmgear' ORDER BY 1, 2;
+
+-- Must return no rows: no audit columns and no stored state
+SELECT table_name, column_name FROM information_schema.columns
+WHERE table_schema = 'filmgear' AND column_name IN ('created_at', 'updated_at', 'status', 'days_late');
+
+-- Constraints: PK, FK and CHECK
+SELECT c.conrelid::regclass, c.conname, c.contype::text, pg_get_constraintdef(c.oid)
+FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
+WHERE n.nspname = 'filmgear' ORDER BY 1, 3, 2;
+
+-- Indexes
+SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'filmgear' ORDER BY 1, 2;
+```
+
+If a rule marked **engine** is missing, somebody dropped it. If a rule marked **domain only** shows up, it has
+been pushed down and needs reclassifying. The engine wins: the document is broken and the document gets fixed.
+
+The three `CHECK` constraints are additionally verified by breaking them by hand, which is the evidence article
+XII asks for:
+
+```sql
+-- All three must fail
+INSERT INTO filmgear.equipment (id, name, brand, model_code, category_id, total_units, available_units, photo_key, deleted_at)
+VALUES ('99999999-9999-4999-8999-999999999999', 'Broken', 'X', 'BROKEN-01', '11111111-1111-4111-8111-111111111111', 0, 0, NULL, NULL);
+
+INSERT INTO filmgear.equipment (id, name, brand, model_code, category_id, total_units, available_units, photo_key, deleted_at)
+VALUES ('99999999-9999-4999-8999-999999999998', 'Broken', 'X', 'BROKEN-02', '11111111-1111-4111-8111-111111111111', 1, 5, NULL, NULL);
+
+INSERT INTO filmgear."user" (id, username, password_hash, role)
+VALUES ('88888888-8888-4888-8888-888888888888', 'broken', 'x', 'superadmin');
+```
