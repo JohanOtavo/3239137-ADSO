@@ -68,3 +68,58 @@ As a user I want to authenticate so I can work according to my role.
   is unique: duplicate 409.
 - **AC-05.2** Producers are listed and searched by name or document number, paginated.
 - **AC-05.3** Producers are never deleted.
+
+### US-06 - Record a rental
+- **AC-06.1** A rental belongs to **one** producer, is recorded by the authenticated user and carries 1 or 2 lines.
+- **AC-06.2** The same equipment cannot appear twice in one rental (422).
+- **AC-06.3** Each line takes **1** available unit in the same operation. With no units: 409 and **nothing is
+  recorded**.
+- **AC-06.4** A producer cannot hold more than **2 pieces of equipment** out at once (422, with the current count).
+- **AC-06.5** A producer with any **overdue** equipment cannot rent again (409).
+- **AC-06.6** The due date is `rented_at + 4 days`. The line freezes the name, model code and category name **at
+  that instant**.
+- **AC-06.7** A recorded rental is never edited and never deleted.
+
+### US-07 - Record a return
+- **AC-07.1** One **line** is returned at a time. It sets `returned_at` and gives one unit back.
+- **AC-07.2** Returning an already-returned line: 409. It **never** adds the unit twice.
+- **AC-07.3** Available units never exceed the total (the database guarantees it).
+- **AC-07.4** Once every line is returned, the rental reads as **closed**.
+
+### US-08 - Read a rental and list rentals
+- **AC-08.1** Reading a rental returns its lines and its computed state (`open`, `overdue`, `closed`).
+- **AC-08.2** List by date range, state and producer, ordered by date descending, paginated.
+- **AC-08.3** The state is **computed**, not stored.
+
+### US-09 - Overdue equipment
+- **AC-09.1** Lists the unreturned lines whose `due_at` is in the past: equipment, producer, days late.
+- **AC-09.2** Ordered by most days late first. `admin` and `advisor` only.
+
+### US-10 - Most-requested report
+- **AC-10.1** Given a date range, one row per **equipment and frozen category name**, with how many times it was
+  rented, ordered descending.
+- **AC-10.2** End before start: 422. A range with no rentals: an empty list, not an error.
+- **AC-10.3** The report is **not** broken down by advisor or by producer.
+- **AC-10.4** A report over a closed period **does not change** when the equipment or its category is renamed later.
+- **AC-10.5** `admin` only.
+
+## 4. Business rules
+
+| # | Rule |
+|---|---|
+| BR-1 | Available units stay between 0 and the total, always. |
+| BR-2 | Rental term: 4 days. At most 2 pieces of equipment out per producer. |
+| BR-3 | A producer with overdue equipment rents nothing else until it comes back. |
+| BR-4 | What a line freezes (name, model code, category) does not follow the catalogue. |
+| BR-5 | Rentals and returns are never deleted. Equipment is only soft deleted. |
+| BR-6 | Dates are UTC instants. Text a user reads is Spanish; code is English. |
+
+## 5. Non-functional requirements
+
+| # | Requirement | How it is measured |
+|---|---|---|
+| NFR-1 | Equipment search answers in under 300 ms with 5,000 pieces of equipment | Load test using the `tool` seeder |
+| NFR-2 | Two advisors handing out the **last unit** at once: one wins, the other gets 409 | Concurrent test with two processes |
+| NFR-3 | The password never travels or is stored in clear, and never appears in logs | Log and response review |
+| NFR-4 | Every HTTP error uses the same body (see the contract) | Contract test |
+| NFR-5 | The system starts with one command and the database starts empty | `infra` README |
