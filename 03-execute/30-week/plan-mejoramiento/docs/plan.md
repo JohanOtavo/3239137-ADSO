@@ -1,63 +1,63 @@
-# Plan técnico — film-gear
+# Technical plan - film-gear
 
-Cómo se construye lo que dicen [`spec.md`](spec.md) y [`constitution.md`](constitution.md). El esquema **no** se
-describe aquí: vive en [`data-model.md`](data-model.md). La forma del sistema, en
+How what [`spec.md`](spec.md) and [`constitution.md`](constitution.md) describe gets built. The schema is **not**
+described here: it lives in [`data-model.md`](data-model.md). The shape of the system is in
 [`architecture.md`](architecture.md).
 
-## 1. Decisiones técnicas
+## 1. Technical decisions
 
-| # | Decisión | Elección | Por qué |
+| # | Decision | Choice | Why |
 |---|---|---|---|
-| D-01 | Lenguaje y runtime | PHP 8.3 | Lo exige el acta: backend en PHP con Laravel |
-| D-02 | Framework HTTP | Laravel 12 | Contrato en [`api-contract.md`](api-contract.md) |
-| D-03 | Persistencia | Constructor de consultas de Laravel + migraciones, sobre PostgreSQL 16 | El esquema es de las migraciones ([ADR-001](adr/adr-001-propiedad-del-esquema.md)) |
-| D-04 | Concurrencia | Escritura condicionada sobre `available_units` ([ADR-002](adr/adr-002-concurrencia-optimista.md)) | Última unidad (RNF-2) |
-| D-05 | Fechas | Instantes UTC (`timestamptz`); el reloj es un puerto (`Clock`) | Probar vencimientos sin esperar 4 días |
-| D-06 | Reporte | Una consulta agregada por un puerto de lectura ([ADR-004](adr/adr-004-reporte-agregado-y-congelado.md)) | Estable y barato |
-| D-07 | Objetos de valor | `ModelCode`, `Quantity`, `DocumentNumber`, `DateRange`: viven dentro de la fila de su dueño, sin tabla | No tienen identidad |
-| D-08 | Fotos | Binario en almacenamiento externo (disco en local); la base guarda solo `photo_key` | Clave opaca, nunca ruta |
-| D-09 | Contraseñas | Argon2id detrás del puerto `PasswordHasher`; el dominio nunca ve la clave en claro | Artículo IX |
-| D-10 | Arranque | La aplicación crea el admin inicial desde `ADMIN_USERNAME` / `ADMIN_PASSWORD` | La base no puede producir el hash |
-| D-11 | Autenticación | JWT HS256, 8 horas, clave en `JWT_SECRET` | Simple y sin estado |
-| D-12 | Pruebas | PHPUnit, con dobles para los puertos y una base real solo en pruebas de integración | Pirámide de pruebas |
-| D-13 | Frontend | React con Vite, sin librería de componentes | Siete pantallas de tablas y formularios no justifican un sistema de diseño |
-| D-14 | Idioma | `tool/check-language.mjs` ejecutado en CI | El artículo XI necesita una verificación, no una promesa |
+| D-01 | Language and runtime | PHP 8.3 | Required by the plan: backend in PHP with Laravel |
+| D-02 | HTTP framework | Laravel 12 | Contract in [`api-contract.md`](api-contract.md) |
+| D-03 | Persistence | Laravel query builder plus migrations, over PostgreSQL 16 | Migrations own the schema ([ADR-001](adr/adr-001-schema-ownership.md)) |
+| D-04 | Concurrency | Conditional write over `available_units` ([ADR-002](adr/adr-002-optimistic-concurrency.md)) | The last unit (NFR-2) |
+| D-05 | Dates and clock | UTC instants (`timestamptz`); the clock is a port (`Clock`) | Test a due date without waiting four days |
+| D-06 | Report | One aggregated query behind a read port ([ADR-004](adr/adr-004-aggregated-frozen-report.md)) | Stable and cheap |
+| D-07 | Value objects | `ModelCode`, `Quantity`, `DocumentNumber`, `DateRange`: they live inside their owner's row, with no table | They have no identity |
+| D-08 | Photos | Binary in external storage (local disk); the database stores only `photo_key` | Opaque key, never a path |
+| D-09 | Passwords | Argon2id behind the `PasswordHasher` port; the domain never sees the plain password | Article IX |
+| D-10 | Boot | The application creates the first admin from `ADMIN_USERNAME` / `ADMIN_PASSWORD` | The database cannot produce the hash |
+| D-11 | Authentication | JWT HS256, 8 hours, key in `JWT_SECRET` | Simple and stateless |
+| D-12 | Tests | PHPUnit, with doubles for the ports and a real database only in integration tests | Test pyramid |
+| D-13 | Frontend | React with Vite, no component library | Seven screens of tables and forms do not justify a design system |
+| D-14 | Language | `tool/check-language.mjs` run in CI | Article XI needs a check, not a promise |
 
-**Sin modelos de Eloquent.** Un modelo por tabla sería un segundo dominio en paralelo, con sus propias reglas y
-su propia idea de qué es un equipo. El dominio ya existe en `api/app/Domain/`; los repositorios solo traducen
-filas a esos objetos y al revés.
+**No Eloquent models.** One model per table would be a second domain running in parallel, with its own rules and
+its own idea of what a piece of equipment is. The domain already exists in `api/app/Domain/`; repositories only
+translate rows into those objects and back.
 
-## 2. Configuración por entorno
+## 2. Environment configuration
 
-| Variable | Obligatoria | Ejemplo |
+| Variable | Required | Example |
 |---|---|---|
-| `DATABASE_URL` o `DB_*` | sí | `pgsql://filmgear@db:5432/filmgear` |
-| `DB_SCHEMA` | sí | `filmgear` |
-| `JWT_SECRET` | sí | cadena larga aleatoria |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | sí | definidos en `.env`, nunca en el repositorio |
+| `DATABASE_URL` or `DB_*` | yes | `pgsql://filmgear@db:5432/filmgear` |
+| `DB_SCHEMA` | yes | `filmgear` |
+| `JWT_SECRET` | yes | long random string |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | yes | set in `.env`, never in the repository |
 | `PHOTOS_DIR` | no | `storage/app/photos` |
-| `CORS_ORIGIN` | sí | `http://localhost:5173` |
+| `CORS_ORIGIN` | yes | `http://localhost:5173` |
 
-Un secreto ausente se nota al levantar, no en la primera petición: el arranque falla si falta `JWT_SECRET`.
+A missing secret shows up at boot, not on the first request: startup fails when `JWT_SECRET` is absent.
 
-## 3. Estrategia de pruebas
+## 3. Test strategy
 
-| Nivel | Qué prueba | Contra qué |
+| Level | What it checks | Against what |
 |---|---|---|
-| Dominio | Invariantes: máximo 2, vencimiento a 4 días, unidades en rango | Nada: objetos puros |
-| Aplicación | Casos de uso: alquilar, devolver, reporte | Dobles de los puertos |
-| Integración | Repositorios y consulta del reporte | PostgreSQL real |
-| Contrato | Cuerpo de error único y códigos de estado | La API levantada |
-| Arquitectura | Artículos I, II y III | Los propios archivos |
-| Concurrencia | Dos procesos por la última unidad | PostgreSQL real |
-| Carga | Búsqueda con 5 000 equipos bajo 300 ms | PostgreSQL real |
-| Idioma | Artículo XI | Los propios archivos |
+| Domain | Invariants: two item limit, four day term, units in range | Nothing: plain objects |
+| Application | Use cases: rent, return, report | Port doubles |
+| Integration | Repositories and the report query | A real PostgreSQL |
+| Contract | Single error body and status codes | The running API |
+| Architecture | Articles I, II and III | The source files |
+| Concurrency | Two processes after the last unit | A real PostgreSQL |
+| Load | Search over 5,000 pieces of equipment under 300 ms | A real PostgreSQL |
+| Language | Article XI | The source files |
 
-El acta pide **15 o más archivos de prueba**. Esa cuenta se lleva en [`tasks.md`](tasks.md), no aquí.
+The plan asks for **15 or more test files**. That count is kept in [`tasks.md`](tasks.md), not here.
 
-## 4. Orden de construcción
+## 4. Build order
 
-Esqueleto y salud → migración inicial con semilla → dominio → casos de uso con dobles → adaptadores → API →
-pruebas de contrato, concurrencia y carga → frontend → sitio público.
+Skeleton and health, then the initial migration with its seed, then the domain, then use cases against doubles,
+then adapters, then the API, then contract, concurrency and load tests, then the frontend, then the public site.
 
-El detalle, con su evidencia, está en [`tasks.md`](tasks.md).
+The detail, with its evidence, is in [`tasks.md`](tasks.md).
