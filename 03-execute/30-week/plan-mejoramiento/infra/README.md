@@ -14,8 +14,13 @@ The schema is **not defined here**. The engine starts with no tables and the
 API's migrations create them at boot (article V, ADR-001). Check it:
 
 ```bash
-grep -ri "create table" .    # returns nothing
+find . -name '*.sql'                      # no files
+grep -rl "docker-entrypoint-initdb.d" .   # no mount
 ```
+
+Those are the two ways DDL could reach this folder: a SQL file shipped here, or
+an init directory mounted into the engine. `.github/workflows/filmgear-compose.yml`
+runs both on every push.
 
 ## One command
 

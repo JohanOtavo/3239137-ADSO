@@ -30,11 +30,26 @@ jobs:
         run: docker compose config --quiet
 
       # Article V: infra starts an empty engine. The schema belongs to the
-      # migrations, so a CREATE TABLE in this folder is a contract breach.
-      - name: Assert no DDL lives in infra
+      # migrations.
+      #
+      # The check looks for the two ways DDL could actually reach this folder,
+      # not for the words themselves. A plain text search matches the README
+      # and the compose comment that document this very rule, which is how the
+      # first version of this job failed on its own documentation.
+      - name: Assert no DDL ships with infra
         run: |
-          if grep -ril "create table" . ; then
-            echo "infra must not contain DDL: the schema belongs to the migrations (article V, ADR-001)"
+          if find . -name '*.sql' -print -quit | grep -q . ; then
+            echo "infra must not ship .sql files: the schema belongs to the migrations (article V, ADR-001)"
+            find . -name '*.sql'
             exit 1
           fi
-          echo "no DDL in infra"
+
+          # Only the compose files can actually declare a mount. Scanning
+          # prose as well is what made the two previous versions of this job
+          # fail on the README that documents it.
+          if grep -rl --include='*.yml' --include='*.yaml' "docker-entrypoint-initdb.d" . ; then
+            echo "infra must not mount an init directory into the engine (article V, ADR-001)"
+            exit 1
+          fi
+
+          echo "no .sql files and no init mount: the engine starts empty"
