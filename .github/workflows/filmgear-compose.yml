@@ -44,7 +44,10 @@ jobs:
             exit 1
           fi
 
-          if grep -rl "docker-entrypoint-initdb.d" . ; then
+          # Only the compose files can actually declare a mount. Scanning
+          # prose as well is what made the two previous versions of this job
+          # fail on the README that documents it.
+          if grep -rl --include='*.yml' --include='*.yaml' "docker-entrypoint-initdb.d" . ; then
             echo "infra must not mount an init directory into the engine (article V, ADR-001)"
             exit 1
           fi
