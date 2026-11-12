@@ -1,73 +1,76 @@
 Este proyecto es la solución del plan de mejoramiento del aprendiz A07, ficha 3239137, dominio film-gear.
 
-# film-gear · Alquiler de cámaras y drones para producción
+# film-gear · Camera and drone rental for production
 
-Una casa de alquiler de equipo audiovisual necesita llevar su catálogo, sus
-productores y sus alquileres, y saber qué equipos se solicitan más. Eso es todo
-lo que hace este sistema, y nada más.
+A rental house needs to know three things: what it owns, who took it and when it comes back. That is all this
+system does.
 
-## Qué resuelve
+> The sentence above is kept in Spanish because the improvement plan requires the README to start with it
+> verbatim. Everything else in this repository is written in English, except text a user reads.
 
-| Concepto | Qué es aquí |
+## What it covers
+
+| Concept | What it is here |
 |---|---|
-| **Equipo** | Un modelo del catálogo, identificado por su código de modelo. Las unidades se cuentan, no se identifican |
-| **Unidad** | Una copia física de un equipo. Hay un total y hay disponibles |
-| **Categoría** | Cinco fijas y sembradas: cámaras, lentes, drones, audio, estabilizadores |
-| **Productor** | Quien alquila el equipo. No entra al sistema: es un dato |
-| **Asesor** | Quien atiende el mostrador y registra las operaciones |
-| **Alquiler** | Un hecho consumado: quién pidió, quién lo registró y cuándo |
+| **Equipment** | A catalogue model, identified by its model code. Units are counted, not identified |
+| **Unit** | A physical copy. There is a total and there is an available count |
+| **Category** | Five fixed and seeded: cameras, lenses, drones, audio, stabilisers |
+| **Producer** | The party that rents. Does not sign in: a record, not a user |
+| **Advisor** | Whoever works the counter and records the operations |
+| **Rental** | A settled fact: who asked, who recorded it and when |
 
-## Las reglas que no se negocian
+## The rules that define it
 
-- Plazo de **4 días** desde el momento del alquiler.
-- Máximo **2 equipos sin devolver** por productor.
-- Quien tenga algo **vencido** no recibe más hasta devolverlo.
-- Las unidades disponibles van **entre 0 y el total**, siempre.
-- Lo que la línea de la operación **congela** no sigue al catálogo.
-- Operaciones y devoluciones **no se borran**; el catálogo solo tiene baja lógica.
-- Las fechas son instantes **UTC**. Los mensajes al usuario van en español.
+- A **4 day** term from the moment of the rental.
+- At most **2 pieces of equipment** out per producer.
+- Anyone holding something **overdue** gets nothing else until it comes back.
+- Available units stay **between 0 and the total**, always.
+- A recorded rental is **never edited and never deleted**.
+- Equipment removed from the catalogue **stays in the history**.
 
-## Las seis carpetas
+## The six folders
 
-| Carpeta | Qué va ahí |
+| Folder | What goes there |
 |---|---|
-| [`docs/`](docs/) | La especificación propia: constitución, spec, plan, arquitectura, modelo de datos, contrato de la API, tareas y las ADR |
-| [`api/`](api/) | Backend en PHP con Laravel |
-| [`app/`](app/) | Frontend en React |
-| [`page/`](page/) | Sitio público estático que presenta el producto |
-| [`infra/`](infra/) | Contenedores y base de datos, con un solo comando |
-| [`tool/`](tool/) | Sembrador de datos de demostración, por la API |
+| [`docs/`](docs/) | The specification: constitution, spec, plan, architecture, data model, API contract, tasks and the ADRs |
+| [`api/`](api/) | Backend in PHP with Laravel |
+| [`app/`](app/) | Frontend in React |
+| [`page/`](page/) | Public static site presenting the product |
+| [`infra/`](infra/) | Containers and database, with one command |
+| [`tool/`](tool/) | Demo data seeder, through the API, and the language guard |
 
-## Cómo se lee
+## Where to start
 
-Empiece por [`docs/constitution.md`](docs/constitution.md): son los principios
-que el resto del proyecto no puede romper, cada uno con su forma de
-comprobarse. Después [`docs/spec.md`](docs/spec.md), que dice qué debe hacer el
-sistema.
+Read [`docs/constitution.md`](docs/constitution.md) first: those are the principles the rest of the project
+cannot break, each with the way it is checked. Then [`docs/spec.md`](docs/spec.md), which says what the system
+has to do.
 
-## Estado
+## State
 
-En construcción. El avance queda en el historial de commits de esta carpeta, un
-commit por pieza terminada.
+Under construction. Progress lives in this folder's commit history, one commit per finished piece.
 
-Los documentos de la especificación, y cuáles existen ya. Los enlaces a los que
-aún no están darán 404 hasta la fecha indicada:
+The specification documents, and which ones exist:
 
-| Documento | Estado |
+| Document | State |
 |---|---|
-| `docs/constitution.md` | Escrito |
-| `docs/spec.md` | Escrito |
-| `docs/data-model.md` | Escrito |
-| `docs/api-contract.md` | Pendiente |
-| `docs/plan.md` | Escrito |
-| `docs/architecture.md` | Escrito |
-| `docs/tasks.md` | Escrito |
-| `docs/adr/` (cuatro) | Escritas |
+| `docs/constitution.md` | Written |
+| `docs/spec.md` | Written |
+| `docs/data-model.md` | Written |
+| `docs/api-contract.md` | Written |
+| `docs/plan.md` | Written |
+| `docs/architecture.md` | Written |
+| `docs/tasks.md` | Written |
+| `docs/adr/` (four) | Written |
 
-Nada en esta carpeta declara terminado lo que no lo está: es el artículo XII, y
-es la razón por la que esta tabla existe.
+Nothing in this folder declares finished what is not: that is article XII, and it is why this table exists.
 
-## Documento del plan
+## Language
 
-El acta del plan de mejoramiento, en su versión con código y sin datos
-personales: [`Plan-Mejoramiento-A07.pdf`](Plan-Mejoramiento-A07.pdf).
+Code, comments, file names, routes and this documentation are English. Error messages, screen labels and the
+five seeded category names are Spanish, because a user reads them. `tool/check-language.mjs` fails the build
+when that line is crossed.
+
+## Plan document
+
+The improvement plan record, in its coded version with no personal data:
+[`Plan-Mejoramiento-A07.pdf`](Plan-Mejoramiento-A07.pdf).
