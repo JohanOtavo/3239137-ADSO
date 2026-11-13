@@ -82,6 +82,55 @@ function markupOnly(source) {
     .join('\n');
 }
 
+/**
+ * In JSX, the text between tags is prose a person reads, exactly like the text
+ * of an HTML page and like the inside of a string literal. The screens are
+ * written for Spanish readers, so this text is removed before the scan; the
+ * code around it, attribute names and expressions in braces are kept.
+ */
+function withoutJsxText(source) {
+  return source
+    .split(/\r?\n/)
+    .map((line) => {
+      let stripped = line;
+      let previous = null;
+
+      /*
+       * Repeated because the runs overlap, and bounded by braces as well as by
+       * tags: JSX text is routinely cut in half by an expression, as in
+       * "hasta {MAX} equipos por alquiler".
+       */
+      while (stripped !== previous) {
+        previous = stripped;
+        stripped = stripped
+          .replace(/[>}][^<>{}]*[<{]/g, (run) => run[0] + run[run.length - 1])
+          .replace(/}[^<>{}]*$/, '}');
+      }
+
+      // Text that ends at a closing tag or at an expression, when the tag that
+      // opened it was on an earlier line: "Catalogo</h2>", "4 dias.{total}".
+      stripped = stripped
+        .replace(/^[^<>{}]*<\//, '<\/')
+        .replace(/^[^<>{}();=]*{/, '{');
+
+      /*
+       * A line of pure JSX text, with no code on it at all. A comment is not
+       * that: it is written for whoever reads the source, so it stays and is
+       * scanned.
+       */
+      const bare = stripped.trim();
+      const isComment = /^(\/\/|\/\*|\*|#)/.test(bare);
+      const isStatement = /^(import|export|return|const|let|var)\b/.test(bare);
+
+      if (!isComment && !isStatement && /^[^<>{}();=]*$/.test(bare)) {
+        return '';
+      }
+
+      return stripped;
+    })
+    .join('\n');
+}
+
 /** Only the halves of a line that are identifiers or comments. */
 function inspectableParts(line) {
   const comment = line.match(/(?:\/\/|#|\/\*|\*)\s?(.*)$/);
@@ -90,8 +139,8 @@ function inspectableParts(line) {
   return [code, comment ? comment[1] : ''];
 }
 
-function findingsIn(source, path, isMarkup) {
-  const code = isMarkup ? markupOnly(source) : source;
+function findingsIn(source, path, kind) {
+  const code = kind === 'markup' ? markupOnly(source) : kind === 'jsx' ? withoutJsxText(source) : source;
   const lines = withoutStringLiterals(code).split(/\r?\n/);
   const findings = [];
 
@@ -157,6 +206,17 @@ async function codeFilesIn(directory) {
   return files;
 }
 
+/** Markup, JSX, or plain code: the three ways text reaches a person. */
+function kindOf(path) {
+  const extension = extname(path);
+
+  if (extension === '.html') {
+    return 'markup';
+  }
+
+  return extension === '.jsx' || extension === '.tsx' ? 'jsx' : 'code';
+}
+
 async function main() {
   const roots = process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_ROOTS;
   const findings = [];
@@ -172,7 +232,7 @@ async function main() {
       findings.push(...findingsIn(
         await readFile(path, 'utf8'),
         relative('.', path),
-        extname(path) === '.html',
+        kindOf(path),
       ));
     }
   }
