@@ -1,0 +1,243 @@
+/*
+ * One stylesheet, no framework. Seven screens of tables and forms do not
+ * justify a design system, and a stylesheet somebody can read end to end is
+ * easier to keep consistent than a set of utility classes.
+ */
+:root {
+  --ink: #16181d;
+  --muted: #5d6470;
+  --line: #d7dbe2;
+  --surface: #ffffff;
+  --page: #f4f6f9;
+  --accent: #1f5f8b;
+  --danger: #a3242c;
+  --warning: #8a5a00;
+  --ok: #1d6b45;
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 20px 14px;
+}
+
+.sidebar h1 {
+  font-size: 17px;
+  margin: 0 0 4px;
+}
+
+.sidebar .who {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar a {
+  color: var(--ink);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+}
+
+.sidebar a:hover {
+  background: var(--page);
+}
+
+.sidebar a[aria-current="page"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+main {
+  padding: 24px 28px 60px;
+  max-width: 1100px;
+}
+
+h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+input,
+select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  min-width: 170px;
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  border: 1px solid currentColor;
+}
+
+.tag.open { color: var(--accent); }
+.tag.overdue { color: var(--danger); }
+.tag.closed { color: var(--ok); }
+
+.notice {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid currentColor;
+  margin-bottom: 16px;
+}
+
+.notice.error { color: var(--danger); }
+.notice.ok { color: var(--ok); }
+.notice.empty { color: var(--muted); border-style: dashed; }
+
+.field-issue {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.pager {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sign-in {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.sign-in form {
+  width: min(360px, 92vw);
+}
+
+.sign-in input {
+  width: 100%;
+}
+
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+/* The operator screens are used on a laptop, but a phone must not break. */
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  main {
+    padding: 18px 16px 48px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
