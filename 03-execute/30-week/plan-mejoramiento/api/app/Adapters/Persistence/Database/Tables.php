@@ -35,6 +35,12 @@ final class Tables
             return null;
         }
 
+        return self::requiredInstant($value);
+    }
+
+    /** For columns the schema declares NOT NULL, so the caller keeps a plain instant. */
+    public static function requiredInstant(string $value): DateTimeImmutable
+    {
         return (new DateTimeImmutable($value))->setTimezone(new DateTimeZone('UTC'));
     }
 }

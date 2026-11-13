@@ -134,7 +134,7 @@ final readonly class DatabaseRentalRepository implements RentalRepository
             ->get();
 
         return array_map(static function (object $row) use ($now): OverdueRow {
-            $dueAt = Tables::toInstant((string) $row->due_at);
+            $dueAt = Tables::requiredInstant((string) $row->due_at);
 
             return new OverdueRow(
                 (string) $row->rental_id,
@@ -194,7 +194,7 @@ final readonly class DatabaseRentalRepository implements RentalRepository
                 (string) $row->equipment_name,
                 ModelCode::fromString((string) $row->model_code),
                 (string) $row->category_name,
-                Tables::toInstant((string) $row->due_at),
+                Tables::requiredInstant((string) $row->due_at),
                 $row->returned_at === null ? null : Tables::toInstant((string) $row->returned_at),
             );
         }
@@ -211,7 +211,7 @@ final readonly class DatabaseRentalRepository implements RentalRepository
             $id,
             (string) $row->producer_id,
             (string) $row->rented_by_user_id,
-            Tables::toInstant((string) $row->rented_at),
+            Tables::requiredInstant((string) $row->rented_at),
             $items[$id] ?? [],
             $this->policy,
         );
