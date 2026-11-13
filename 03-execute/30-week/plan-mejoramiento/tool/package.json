@@ -1,0 +1,15 @@
+{
+  "name": "filmgear-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Language guard and data seeder for the film-gear project",
+  "scripts": {
+    "check-language": "node check-language.mjs",
+    "seed": "node seed.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
