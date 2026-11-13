@@ -6,10 +6,10 @@ namespace App\Adapters\Http\Controller;
 
 use App\Adapters\Http\Middleware\AuthenticateToken;
 use App\Adapters\Http\Request\Input;
+use App\Adapters\Http\Request\PageLimits;
 use App\Adapters\Http\Response\Presenter;
 use App\Application\Port\Clock;
 use App\Application\Shared\AuthenticatedUser;
-use App\Application\Shared\Pagination;
 use App\Application\UseCase\Rental\GetRentalService;
 use App\Application\UseCase\Rental\ListOverdueService;
 use App\Application\UseCase\Rental\RentEquipmentService;
@@ -22,10 +22,8 @@ use Illuminate\Http\Request;
 /** US-06, US-07 and US-08 - Recording a rental, returning a line, consulting. */
 final readonly class RentalController
 {
-    private const MAX_PAGE_SIZE = 100;
-    private const DEFAULT_PAGE_SIZE = 20;
-
     public function __construct(
+        private PageLimits $pages,
         private RentEquipmentService $rent,
         private ReturnRentalItemService $return,
         private SearchRentalsService $search,
@@ -56,12 +54,7 @@ final readonly class RentalController
             Input::optionalInstant($request, 'to'),
             Input::optionalStatus($request),
             Input::optionalString($request, 'producer_id'),
-            Pagination::of(
-                Input::optionalInt($request, 'page'),
-                Input::optionalInt($request, 'size'),
-                self::MAX_PAGE_SIZE,
-                self::DEFAULT_PAGE_SIZE,
-            ),
+            $this->pages->of($request),
         );
 
         $now = $this->clock->now();
