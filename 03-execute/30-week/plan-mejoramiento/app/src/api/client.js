@@ -7,7 +7,7 @@ import { ApiError } from './ApiError.js';
  * one place: the bearer header is never forgotten, and a 401 always means the
  * same thing to the screens.
  */
-const BASE_URL = import.meta.env?.VITE_API_URL ?? 'http://localhost:8080/api/v1';
+const BASE_URL = import.meta.env?.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
 export function createClient({ baseUrl = BASE_URL, tokenOf, onUnauthenticated, fetchImpl } = {}) {
   const send = fetchImpl ?? ((...args) => fetch(...args));

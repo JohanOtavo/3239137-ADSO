@@ -33,8 +33,15 @@ When it settles:
 
 | Service | Where | What it is |
 |---|---|---|
+| Frontend | http://localhost:5173 | The seven operator screens |
 | API | http://localhost:8000/api/v1/health | `{"status":"ok"}` |
 | Engine | `localhost:5432` | PostgreSQL 16, schema `filmgear` |
+
+The frontend does not wait for the API to be healthy. It talks to the API from
+the browser, not from the container, so `APP_API_URL` is the address **the
+browser** can reach: `api` resolves inside the compose network and nowhere else.
+A frontend that refused to start because the API was slow would also be worse at
+saying what is wrong than one that loads and reports the failure.
 
 The API boots in this order: wait for the engine to accept connections, run the
 migrations, then serve.

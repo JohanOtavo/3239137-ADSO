@@ -15,7 +15,7 @@
 
 import process from 'node:process';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:8080/api/v1';
+const API_URL = process.env.API_URL ?? 'http://localhost:8000/api/v1';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 
