@@ -1,5 +1,6 @@
 <?php
 
+use App\Adapters\Console\EnsureAdminCommand;
 use App\Adapters\Http\Middleware\AuthenticateToken;
 use App\Adapters\Http\Middleware\RequireRole;
 use App\Adapters\Http\Response\ErrorResponder;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         apiPrefix: 'api/v1',
     )
+    ->withCommands([EnsureAdminCommand::class])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'token' => AuthenticateToken::class,
