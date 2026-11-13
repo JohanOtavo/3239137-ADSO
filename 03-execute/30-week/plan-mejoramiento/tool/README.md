@@ -25,8 +25,20 @@ Exit code `0` when clean, `1` with a list of `file:line` otherwise.
 
 ## `seed.mjs`
 
-Fills a running instance with enough data to see every screen work: 40 pieces of
-equipment, 10 producers and 15 rentals, 3 of them overdue (T-21).
+Fills a running instance with enough data to see every screen work: 50 pieces of
+equipment, 10 producers and 15 rentals, 5 of them closed (T-21).
+
+Fifteen rentals out of ten producers is not something the rules allow in one
+pass: a producer may hold two pieces of equipment at a time, and a rental
+carries at most two lines. So the first round fills every producer to the limit,
+five of those rentals are returned, and the freed producers rent again.
+
+**On overdue lines.** The task asks for three. The seeder cannot produce them,
+and says so instead of pretending: a line falls due four days after the rental
+and the server owns that clock, so the only way to stage an overdue line is to
+run the API with its clock moved forward. A seeder that wrote the date directly
+would be writing a state the API cannot reach, which is the one thing seeding
+through the API is meant to rule out.
 
 It goes **through the API**, never into the database. A seeder that wrote rows
 directly would be free to write states the API cannot produce, and the data it
