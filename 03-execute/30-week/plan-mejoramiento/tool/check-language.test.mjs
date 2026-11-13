@@ -39,3 +39,24 @@ test('a Spanish identifier fails even without a comment', () => {
   assert.match(result.stderr, /spanish\.php:6/);
   assert.match(result.stderr, new RegExp('nom' + 'bre'));
 });
+
+/*
+ * JSX needs its own cases. The text between tags is what a person reads, so it
+ * is Spanish by contract, while the identifiers and comments around it are not.
+ * A guard that read the text would flag every screen; a guard that skipped the
+ * whole file would flag nothing.
+ */
+test('Spanish text between JSX tags passes', () => {
+  const result = runOn('clean.jsx');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /passed/);
+});
+
+test('a Spanish JSX component name and comment still fail', () => {
+  const result = runOn('spanish.jsx');
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /spanish\.jsx:1/);
+  assert.match(result.stderr, /spanish\.jsx:3/);
+});

@@ -1,0 +1,39 @@
+name: filmgear-app
+
+on:
+  push:
+    paths:
+      - '03-execute/30-week/plan-mejoramiento/app/**'
+      - '.github/workflows/filmgear-app.yml'
+  pull_request:
+    paths:
+      - '03-execute/30-week/plan-mejoramiento/app/**'
+      - '.github/workflows/filmgear-app.yml'
+
+jobs:
+  app:
+    name: Tests and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03-execute/30-week/plan-mejoramiento/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: 03-execute/30-week/plan-mejoramiento/app/package-lock.json
+
+      - name: Install from the lockfile
+        run: npm ci
+
+      - name: The client, the routes and the formatters
+        run: npm test
+
+      # The build is part of the check: a screen that does not compile is not a
+      # screen, and only the build notices a bad import.
+      - name: Build the bundle
+        run: npm run build

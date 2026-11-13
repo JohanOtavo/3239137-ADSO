@@ -55,6 +55,22 @@ services:
       db:
         condition: service_healthy
 
+  # The frontend is a folder of static files behind nginx. It depends on the API
+  # only at run time, in the browser, so it does not wait for it to be healthy:
+  # a frontend that will not start because the API is slow is worse at saying
+  # what is wrong than a frontend that loads and reports the failure.
+  app:
+    build:
+      context: ../app
+      args:
+        VITE_API_URL: ${APP_API_URL:-http://localhost:8000/api/v1}
+    image: filmgear-app:local
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - filmgear
+
 volumes:
   db-data:
   photos:

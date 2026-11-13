@@ -45,5 +45,5 @@ directly would be free to write states the API cannot produce, and the data it
 left would prove nothing about the rules.
 
 ```bash
-API_URL=http://localhost:8080/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… node seed.mjs
+API_URL=http://localhost:8000/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… node seed.mjs
 ```
