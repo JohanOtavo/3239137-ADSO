@@ -1,0 +1,42 @@
+name: filmgear-language
+
+# The language mark was lost entirely in the previous delivery, so the rule is
+# checked by the build and not by memory (article XI, T-18).
+on:
+  push:
+    paths:
+      - '03-execute/30-week/plan-mejoramiento/api/**'
+      - '03-execute/30-week/plan-mejoramiento/app/**'
+      - '03-execute/30-week/plan-mejoramiento/page/**'
+      - '03-execute/30-week/plan-mejoramiento/tool/**'
+      - '.github/workflows/filmgear-language.yml'
+  pull_request:
+    paths:
+      - '03-execute/30-week/plan-mejoramiento/api/**'
+      - '03-execute/30-week/plan-mejoramiento/app/**'
+      - '03-execute/30-week/plan-mejoramiento/page/**'
+      - '03-execute/30-week/plan-mejoramiento/tool/**'
+      - '.github/workflows/filmgear-language.yml'
+
+jobs:
+  language:
+    name: English identifiers and comments
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03-execute/30-week/plan-mejoramiento/tool
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The guard is tested first. A guard that passes everything would make
+      # this job green while enforcing nothing.
+      - name: The guard's own test
+        run: node --test
+
+      - name: The four code folders
+        run: node check-language.mjs
