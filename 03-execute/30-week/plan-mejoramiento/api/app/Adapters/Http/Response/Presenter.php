@@ -54,7 +54,7 @@ final class Presenter
     }
 
     /** @return array<string, mixed> */
-    public function producer(Producer $producer, ?int $openRentals = null): array
+    public static function producer(Producer $producer, ?int $openRentals = null): array
     {
         $body = [
             'id' => $producer->id,
