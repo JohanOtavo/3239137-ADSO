@@ -51,12 +51,57 @@ final class LayerDependenciesTest extends TestCase
     /** Article III - infrastructure is only built in the composition root. */
     public function test_only_the_provider_instantiates_adapters(): void
     {
-        $adapters = $this->classNamesIn('app/Adapters');
+        $offenders = $this->adaptersBuiltIn('app', $this->classNamesIn('app/Adapters'));
+
+        $this->assertSame([], $offenders, "Infrastructure is built outside the composition root:\n".implode("\n", $offenders));
+    }
+
+    /**
+     * The check has to be seen failing.
+     *
+     * Everything above passes, and a check that has only ever passed proves
+     * that it runs, not that it looks at anything. The two fixtures are a
+     * domain class importing the framework and a use case building its own
+     * adapter: the exact mistakes articles I and III exist to stop.
+     */
+    public function test_a_forbidden_import_is_caught(): void
+    {
+        $offenders = $this->importsMatching('tests/Architecture/Fixtures/ForbiddenImport', [
+            'Illuminate',
+        ]);
+
+        $this->assertCount(1, $offenders);
+        $this->assertStringContainsString('DomainWithFramework.php', $offenders[0]);
+        $this->assertStringContainsString('Illuminate\Support\Collection', $offenders[0]);
+    }
+
+    public function test_an_adapter_built_outside_the_composition_root_is_caught(): void
+    {
+        $offenders = $this->adaptersBuiltIn(
+            'tests/Architecture/Fixtures/AdapterOutsideRoot',
+            ['DatabaseEquipmentRepository'],
+        );
+
+        $this->assertCount(1, $offenders);
+        $this->assertStringContainsString('ServiceBuildingAnAdapter.php', $offenders[0]);
+        $this->assertStringContainsString('builds DatabaseEquipmentRepository', $offenders[0]);
+    }
+
+    /**
+     * Files under the directory that build one of the given adapters.
+     *
+     * @param  list<string>  $adapters
+     * @return list<string>
+     */
+    private function adaptersBuiltIn(string $directory, array $adapters): array
+    {
         $offenders = [];
 
-        foreach ($this->filesIn('app') as $file) {
+        foreach ($this->filesIn($directory) as $file) {
             $path = $this->relative($file);
 
+            // The root may build adapters; that is what it is for. So may an
+            // adapter, which often wraps another.
             if (str_starts_with($path, 'app/Providers/') || str_starts_with($path, 'app/Adapters/')) {
                 continue;
             }
@@ -70,7 +115,7 @@ final class LayerDependenciesTest extends TestCase
             }
         }
 
-        $this->assertSame([], $offenders, "Infrastructure is built outside the composition root:\n".implode("\n", $offenders));
+        return $offenders;
     }
 
     /**
