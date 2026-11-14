@@ -118,8 +118,8 @@ As a user I want to authenticate so I can work according to my role.
 
 | # | Requirement | How it is measured |
 |---|---|---|
-| NFR-1 | Equipment search answers in under 300 ms with 5,000 pieces of equipment | Load test using the `tool` seeder |
-| NFR-2 | Two advisors handing out the **last unit** at once: one wins, the other gets 409 | Concurrent test with two processes |
+| NFR-1 | Equipment search answers in under 300 ms with 5,000 pieces of equipment | `tool/load-search.mjs`: p95 over six access paths |
+| NFR-2 | Two advisors handing out the **last unit** at once: one wins, the other gets 409 | `ConcurrentWithdrawalTest`: two PostgreSQL sessions |
 | NFR-3 | The password never travels or is stored in clear, and never appears in logs | Log and response review |
-| NFR-4 | Every HTTP error uses the same body (see the contract) | Contract test |
+| NFR-4 | Every HTTP error uses the same body (see the contract) | `AuthFlowTest` and the integration suite |
 | NFR-5 | The system starts with one command and the database starts empty | `infra` README |

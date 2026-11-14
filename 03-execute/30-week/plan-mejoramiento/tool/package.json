@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Language guard and data seeder for the film-gear project",
+  "description": "Language guard, data seeder and load test for the film-gear project",
   "scripts": {
     "check-language": "node check-language.mjs",
     "seed": "node seed.mjs",
+    "load-test": "node load-search.mjs",
     "test": "node --test"
   },
   "engines": {
