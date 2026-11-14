@@ -44,7 +44,22 @@ The plan asks for **15 or more**. This list is what is promised:
 | `tests/Architecture/` | `LayerDependenciesTest` |
 | `tests/Integration/` | `EquipmentRepositoryTest`, `RentalRepositoryTest`, `ApiContractTest`, `ConcurrencyTest`, `CatalogSearchPerformanceTest` |
 
-Twenty-three files. The five integration files need PostgreSQL; the rest run against nothing.
+Twenty-three files were promised and twenty-nine exist. Four of the promised
+names are not among them, and this is what replaced each one and why (T-30).
+
+| Promised | Shipped as | Why |
+|---|---|---|
+| `EquipmentRepositoryTest` | `EquipmentCatalogTest` | It drives the catalogue over HTTP, repository included. A name saying "repository" would promise a unit test of one class and deliver an end-to-end one |
+| `RentalRepositoryTest` | `RentalFlowTest` | The same: a rental from the producer to the report, not one adapter in isolation |
+| `ApiContractTest` | `ErrorContractTest` | It walks the fourteen error codes, which is the part of the contract a client cannot discover by reading a happy path |
+| `ConcurrencyTest` | `ConcurrentWithdrawalTest` | There is one race in this system and the name says which |
+| `CatalogSearchPerformanceTest` | `tool/load-search.mjs` | NFR-1 is measured from outside the server over 5,000 pieces of equipment. Inside PHPUnit it would measure a query, not what a browser waits for |
+
+Three more exist that were never promised: `AuthFlowTest`, `PasswordNeverLeaksTest`
+and `SetEquipmentPhotoServiceTest`, plus four adapter tests. They came from
+gaps found while running the finished system.
+
+Five of the integration files need PostgreSQL; the rest run against nothing.
 
 ## Definition of done
 
@@ -76,10 +91,11 @@ They are ordered by what costs the most if it is left undone.
 | T-31 | Decide what to do about the three overdue lines | T-21 promises them and the seeder cannot produce them: the due date is computed from the rental and the server owns the clock. Leaving it unexplained reads as a task quietly dropped | Either a documented way to run the stack with its clock moved, or this document's evidence for T-21 corrected to what the API can actually reach |
 | T-32 | Walk the seven screens signed in, as both roles | The one piece of T-22 that no script should claim. The operator has the credentials; nobody else does | A note of what was walked, with both roles, and anything that did not behave |
 
-T-24 through T-29 are code and tests. T-30 and T-31 are decisions about this
-document, and both are worth more than the hour they cost: an evaluator reads
-the promise before the code.
 
-T-24 to T-28 are done and their evidence runs in CI. What is left is T-30 and
-T-31, which are decisions about this document rather than code, and T-32,
-which belongs to whoever has the credentials.
+T-24 to T-30 are done and their evidence runs in CI. T-31 was answered along
+the way: the contract test ages a line through the database, which is the row
+the API would have written days ago, so an overdue line is reachable in a test
+without waiting four days.
+
+What is left is T-32, the walk through the seven screens signed in as both
+roles, which belongs to whoever holds the credentials.
