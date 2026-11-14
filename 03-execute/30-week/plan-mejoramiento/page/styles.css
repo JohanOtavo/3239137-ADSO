@@ -1,28 +1,105 @@
-/* film-gear public site. No framework, no build step, no API calls. */
+/*
+ * film-gear public site. No framework, no build step, no API calls.
+ *
+ * Direction: plasma glass over deep teal. Everything is depth built from
+ * gradients, blur and transforms, so the whole thing stays one stylesheet and
+ * one HTML file. No 3D library: a rental house's presentation page is not
+ * worth a 600 kB download, and CSS perspective does what this page needs.
+ *
+ * Every animation moves transform or opacity only, which the compositor can
+ * handle without laying the page out again.
+ */
 
 :root {
-  --ink: #15202b;
-  --muted: #5b6a7a;
-  --line: #dfe5ec;
-  --paper: #ffffff;
-  --bg: #f5f7fa;
-  --accent: #0f5c4d;
-  --accent-soft: #e6f2ee;
+  /* The plasma. Four hues, mixed by the gradients and nowhere repeated. */
+  --plasma-mint: #19d7a8;
+  --plasma-cyan: #35c5ff;
+  --plasma-violet: #8b6cff;
+  --plasma-deep: #063f38;
+
+  --ink: #eaf5f1;
+  --muted: #9fc0bb;
+  --night: #04100f;
+
+  /* Glass: a tint, a border that catches light, and a top edge highlight. */
+  --glass: rgba(10, 42, 40, 0.55);
+  --glass-strong: rgba(8, 32, 31, 0.78);
+  --glass-line: rgba(129, 226, 205, 0.22);
+  --shine: rgba(255, 255, 255, 0.5);
+
+  /* Depth in three steps, each with a coloured ambient shadow. */
+  --lift-1: 0 1px 2px rgba(2, 12, 11, 0.4), 0 8px 24px -12px rgba(25, 215, 168, 0.25);
+  --lift-2: 0 2px 6px rgba(2, 12, 11, 0.45), 0 22px 50px -20px rgba(25, 215, 168, 0.35);
+  --lift-3: 0 6px 14px rgba(2, 12, 11, 0.5), 0 44px 90px -30px rgba(53, 197, 255, 0.4);
+
+  /* Not one radius everywhere: the scale is part of the hierarchy. */
+  --r-chip: 999px;
+  --r-card: 18px;
+  --r-band: 28px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --measure: 1120px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family: system-ui, "Segoe UI", sans-serif;
   color: var(--ink);
-  background: var(--bg);
-  line-height: 1.6;
+  background: var(--night);
+  line-height: 1.65;
+  overflow-x: hidden;
 }
 
-/* Keyboard users land here first and can jump past the navigation. */
+/*
+ * The plasma field. Three blurred blobs on a fixed layer behind everything,
+ * drifting slowly. It sits in a pseudo-element so no wrapper element exists
+ * only to hold a background.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vmax;
+  z-index: -2;
+  background:
+    radial-gradient(38vmax 38vmax at 18% 12%, rgba(25, 215, 168, 0.42), transparent 62%),
+    radial-gradient(42vmax 42vmax at 82% 8%, rgba(53, 197, 255, 0.34), transparent 64%),
+    radial-gradient(46vmax 46vmax at 60% 88%, rgba(139, 108, 255, 0.3), transparent 66%),
+    radial-gradient(60vmax 50vmax at 50% 40%, var(--plasma-deep), transparent 70%);
+  filter: blur(18px);
+  animation: drift 26s var(--ease-out-expo) infinite alternate;
+}
+
+/* A faint dot screen over the plasma: without texture the gradients read as
+   flat colour on a large monitor. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 3px 3px;
+  mix-blend-mode: overlay;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(2%, 2%, 0) scale(1.08);
+  }
+}
+
 .skip-link {
   position: absolute;
   left: -9999px;
@@ -33,40 +110,47 @@ body {
   top: 1rem;
   z-index: 10;
   padding: 0.6rem 1rem;
-  background: var(--paper);
-  border-radius: 8px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-chip);
+  color: var(--ink);
 }
 
-.hero {
-  background: linear-gradient(165deg, #0b3b31, #0f5c4d 55%, #157a66);
-  color: #fff;
-  padding-bottom: 4rem;
-}
+/* ---- Navigation: a floating glass rail, not a bar welded to the top ---- */
 
 .nav {
+  position: sticky;
+  top: 0.9rem;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  max-width: 1060px;
-  margin: 0 auto;
-  padding: 1.1rem 1.5rem;
+  width: min(var(--measure), calc(100% - 2rem));
+  margin: 0.9rem auto 0;
+  padding: 0.7rem 1.2rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-chip);
+  box-shadow: var(--lift-1);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 
 .brand {
   font-weight: 700;
-  letter-spacing: 0.02em;
-  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  font-size: 1.1rem;
 }
 
 .brand-accent {
-  color: #7fd6bf;
+  color: var(--plasma-mint);
+  text-shadow: 0 0 18px rgba(25, 215, 168, 0.8);
 }
 
 .nav ul {
   display: flex;
-  gap: 1.2rem;
+  gap: 0.4rem;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -74,234 +158,488 @@ body {
 }
 
 .nav a {
-  color: #cfe4dd;
+  display: inline-block;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--r-chip);
+  color: var(--muted);
   text-decoration: none;
-  font-size: 0.93rem;
+  font-size: 0.92rem;
+  transition: color 0.2s, background 0.2s, transform 0.2s var(--ease-out-expo);
 }
 
 .nav a:hover,
-.nav a:focus {
-  color: #fff;
-  text-decoration: underline;
+.nav a:focus-visible {
+  color: var(--night);
+  background: var(--plasma-mint);
+  transform: translateY(-1px);
 }
 
-.hero-text {
-  max-width: 1060px;
+/* ---- Hero: text on the left, a stack of glass slabs tilted in space ---- */
+
+.hero {
+  width: min(var(--measure), calc(100% - 2rem));
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 0;
+  padding: clamp(2.5rem, 7vw, 5.5rem) 0 clamp(2rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
 }
 
 .eyebrow {
-  margin: 0 0 0.6rem;
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #7fd6bf;
+  color: var(--plasma-mint);
+  background: rgba(25, 215, 168, 0.1);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-chip);
+}
+
+/* A live dot, because the whole claim of the page is "in the moment". */
+.eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--plasma-mint);
+  box-shadow: 0 0 10px var(--plasma-mint);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
 }
 
 .hero h1 {
-  font-size: clamp(1.9rem, 5vw, 3rem);
-  line-height: 1.12;
-  margin: 0 0 1rem;
-  max-width: 18ch;
+  font-size: clamp(2.1rem, 6.2vw, 4.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin: 0 0 1.1rem;
+  max-width: 20ch;
+  background: linear-gradient(104deg, #ffffff 18%, var(--plasma-mint) 58%, var(--plasma-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .lead {
-  max-width: 56ch;
-  font-size: 1.08rem;
-  color: #dcebe6;
+  max-width: 52ch;
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  color: var(--muted);
   margin: 0;
 }
 
+/*
+ * The rig: three slabs floating in perspective, one per category on the
+ * counter. It is decorative, so the markup carries aria-hidden and the page
+ * reads the same without it.
+ */
+.rig {
+  position: relative;
+  height: clamp(260px, 32vw, 380px);
+  perspective: 1100px;
+  perspective-origin: 60% 40%;
+}
+
+.slab {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(70%, 290px);
+  height: 52%;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-card);
+  background: var(--glass);
+  box-shadow: var(--lift-3);
+  backdrop-filter: blur(14px);
+  transform-style: preserve-3d;
+  animation: float 9s ease-in-out infinite alternate;
+}
+
+/* The specular edge. One gradient along the top does more for the glass than
+   any amount of extra blur. */
+.slab::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--shine), transparent);
+}
+
+.slab:nth-child(1) {
+  transform: rotateX(16deg) rotateZ(-9deg) translate3d(-27%, -36%, -90px);
+  animation-delay: -1.2s;
+  opacity: 0.6;
+}
+
+.slab:nth-child(2) {
+  transform: rotateX(13deg) rotateZ(-5deg) translate3d(2%, 0, 0);
+  background: var(--glass-strong);
+}
+
+.slab:nth-child(3) {
+  transform: rotateX(10deg) rotateZ(4deg) translate3d(27%, 36%, -50px);
+  animation-delay: -3.4s;
+  opacity: 0.82;
+}
+
+@keyframes float {
+  to {
+    translate: 0 -14px;
+  }
+}
+
+.slab-name {
+  font-weight: 650;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.slab-meta {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Units left, drawn as a bar. The width is the only inline style on the page
+   and it is data, not decoration. */
+.slab-bar {
+  height: 6px;
+  border-radius: var(--r-chip);
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.slab-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--plasma-mint), var(--plasma-cyan));
+  box-shadow: 0 0 14px rgba(53, 197, 255, 0.7);
+}
+
+/* ---- Sections ---- */
+
 main {
-  max-width: 1060px;
+  width: min(var(--measure), calc(100% - 2rem));
   margin: 0 auto;
-  padding: 3rem 1.5rem 0;
+  padding: clamp(1rem, 3vw, 2rem) 0 0;
 }
 
 section {
-  margin-bottom: 3.5rem;
+  margin-bottom: clamp(3rem, 7vw, 5.5rem);
+  /* The navigation floats over the page, so an anchor jump has to stop short
+     of it or the heading lands underneath. */
+  scroll-margin-top: 7.5rem;
 }
 
 h2 {
-  font-size: clamp(1.3rem, 3vw, 1.7rem);
-  margin: 0 0 1.4rem;
+  font-size: clamp(1.5rem, 3.4vw, 2.3rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.6rem;
 }
 
 h3 {
-  font-size: 1.02rem;
-  margin: 0 0 0.45rem;
-  color: var(--accent);
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+  color: #fff;
 }
 
+/* The bands are the page's deepest surface: wide glass with a lot of padding,
+   so the sections read as separate rooms rather than one scroll. */
+.band {
+  padding: clamp(1.4rem, 4vw, 2.6rem);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-band);
+  box-shadow: var(--lift-2);
+  backdrop-filter: blur(18px) saturate(130%);
+}
+
+/*
+ * The card grid breaks out of equal columns: the first card is the loudest
+ * claim on the page, so it takes two of them and the rest fall in behind.
+ */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
-  gap: 1.1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  perspective: 1400px;
 }
 
 .grid article {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 1.25rem;
+  grid-column: span 2;
+  position: relative;
+  padding: 1.4rem 1.35rem;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-card);
+  box-shadow: var(--lift-1);
+  transform-style: preserve-3d;
+  transition:
+    transform 0.45s var(--ease-out-expo),
+    box-shadow 0.45s var(--ease-out-expo),
+    border-color 0.3s;
+}
+
+.grid article:first-child {
+  grid-column: span 4;
+  padding: 1.8rem 1.6rem;
+  background:
+    radial-gradient(90% 140% at 0% 0%, rgba(25, 215, 168, 0.16), transparent 60%),
+    var(--glass-strong);
+}
+
+.grid article:last-child {
+  grid-column: span 4;
+}
+
+.grid article:first-child h3 {
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  max-width: 24ch;
+}
+
+/* The tilt: the card turns towards the reader instead of just lifting. */
+.grid article:hover,
+.grid article:focus-within {
+  transform: translateZ(26px) rotateX(5deg) rotateY(-4deg);
+  box-shadow: var(--lift-3);
+  border-color: rgba(129, 226, 205, 0.5);
 }
 
 .grid p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.96rem;
 }
 
 .wide {
-  max-width: 64ch;
+  max-width: 62ch;
   color: var(--muted);
-  margin: 0 0 1.6rem;
+  margin: 0 0 1.8rem;
+  font-size: 1.02rem;
 }
+
+/* ---- Categories: a row of glass chips that rise one by one ---- */
 
 .categories {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
 }
 
 .categories li {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.95rem 1.1rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-card);
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.95rem;
+  transition: transform 0.35s var(--ease-out-expo), background 0.3s;
+}
+
+.categories li:hover {
+  transform: translateY(-4px);
+  background: var(--glass-strong);
 }
 
 .tag {
-  display: inline-block;
-  margin-right: 0.5rem;
-  padding: 0.12rem 0.55rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 600;
+  flex: none;
+  padding: 0.18rem 0.65rem;
+  border-radius: var(--r-chip);
+  background: linear-gradient(135deg, rgba(25, 215, 168, 0.9), rgba(53, 197, 255, 0.85));
+  color: var(--night);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
-.band {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 1.8rem 1.6rem;
-}
+/* ---- Steps: numbered discs that sit above the surface ---- */
 
 .steps {
   list-style: none;
   counter-reset: step;
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.8rem;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1.3rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.4rem;
 }
 
 .steps li {
   counter-increment: step;
   position: relative;
-  padding-top: 2.4rem;
+  padding-top: 3rem;
 }
 
-/* The number is decorative: screen readers already announce an ordered list. */
+/* Decorative: a screen reader already announces an ordered list. */
 .steps li::before {
   content: counter(step);
   position: absolute;
   top: 0;
   left: 0;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 2.3rem;
+  height: 2.3rem;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 700;
+  background: linear-gradient(150deg, var(--plasma-mint), var(--plasma-cyan) 70%, var(--plasma-violet));
+  color: var(--night);
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: 0 10px 22px -8px rgba(25, 215, 168, 0.8), inset 0 1px 0 var(--shine);
 }
 
 .steps p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.95rem;
 }
 
 .note {
   margin: 0;
-  padding: 0.9rem 1.1rem;
-  border-left: 3px solid var(--accent);
-  background: var(--accent-soft);
-  border-radius: 0 8px 8px 0;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--glass-line);
+  border-left: 3px solid var(--plasma-mint);
+  border-radius: 0 var(--r-card) var(--r-card) 0;
+  background: rgba(25, 215, 168, 0.1);
   color: var(--ink);
-  font-size: 0.95rem;
+  font-size: 0.97rem;
+}
+
+.note strong {
+  color: var(--plasma-mint);
 }
 
 footer {
-  border-top: 1px solid var(--line);
-  margin-top: 1.5rem;
+  width: min(var(--measure), calc(100% - 2rem));
+  margin: 0 auto clamp(1.5rem, 4vw, 3rem);
+  border-top: 1px solid var(--glass-line);
 }
 
 footer p {
-  max-width: 1060px;
-  margin: 0 auto;
-  padding: 1.4rem 1.5rem;
+  margin: 0;
+  padding: 1.6rem 0 0;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 
-/* Narrow screens: the navigation centres and the hero loses its wide gutters. */
+/* ---- Focus: visible on glass, which the default outline is not ---- */
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--plasma-mint);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ---- Narrow screens: one column, and the rig goes under the text ---- */
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding-top: 2rem;
+  }
+
+  .rig {
+    order: 2;
+    height: 250px;
+  }
+
+  /* Narrower slabs, so the three labels still read when the column is a
+     phone wide. */
+  .slab {
+    width: min(66%, 230px);
+    height: 46%;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    perspective: none;
+  }
+
+  .grid article,
+  .grid article:first-child {
+    grid-column: auto;
+  }
+
+  /* The tilt needs a pointer to make sense; on a phone it fires on tap and
+     looks like a glitch, so the card only lifts. */
+  .grid article:hover,
+  .grid article:focus-within {
+    transform: translateY(-3px);
+  }
+}
+
 @media (max-width: 680px) {
   .nav {
     justify-content: center;
   }
 
-  .hero {
-    padding-bottom: 2.5rem;
-  }
-
-  main {
-    padding-top: 2rem;
-  }
-
-  .band {
-    padding: 1.3rem 1.1rem;
+  .nav ul {
+    justify-content: center;
   }
 }
 
-/* A visible ring on every focusable element, not just links: keyboard users
-   need to know where they are, and the default outline disappears on dark
-   backgrounds. */
-a:focus-visible,
-button:focus-visible {
-  outline: 3px solid #7fd6bf;
-  outline-offset: 3px;
-  border-radius: 3px;
-}
-
-.hero a:focus-visible {
-  outline-color: #fff;
-}
-
-/* Respect the system setting: the gradient and transitions are decorative. */
+/*
+ * Respect the system setting. The plasma, the float and the tilt are all
+ * decoration, so they stop entirely: this page has to be readable by somebody
+ * whose machine says motion makes them ill.
+ */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
   }
+
+  .grid article:hover,
+  .grid article:focus-within {
+    transform: none;
+  }
 }
 
-/* Long model names and brand names must not spill out of their card. */
+/*
+ * Blur is the one expensive thing here. Where the browser cannot do it the
+ * surfaces fall back to a solid tint, which keeps every contrast ratio the
+ * same rather than leaving text over raw plasma.
+ */
+@supports not (backdrop-filter: blur(4px)) {
+  .nav,
+  .band,
+  .slab,
+  .grid article,
+  .categories li {
+    background: #06201e;
+  }
+}
+
+/* Long model and brand names must not spill out of their card. */
 .grid article,
 .categories li,
-.steps li {
+.steps li,
+.slab {
   overflow-wrap: anywhere;
 }
