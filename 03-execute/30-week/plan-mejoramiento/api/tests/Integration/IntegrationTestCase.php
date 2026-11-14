@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
+use App\Adapters\Persistence\Database\Tables;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as FoundationTestCase;
@@ -31,9 +32,13 @@ abstract class IntegrationTestCase extends FoundationTestCase
     /** A secret for the test process alone; deployment reads its own. */
     private const TEST_SECRET = 'integration-test-secret-not-for-deployment';
 
-    private const ADMIN_USERNAME = 'root';
+    protected const ADMIN_USERNAME = 'root';
 
-    private const ADMIN_PASSWORD = 'admin-password-for-tests';
+    protected const ADMIN_PASSWORD = 'admin-password-for-tests';
+
+    private const ADVISOR_USERNAME = 'advisor-one';
+
+    private const ADVISOR_PASSWORD = 'advisor-password-for-tests';
 
     public function createApplication(): Application
     {
@@ -121,5 +126,42 @@ abstract class IntegrationTestCase extends FoundationTestCase
     protected function bearer(string $token): array
     {
         return ['Authorization' => 'Bearer '.$token];
+    }
+
+    /**
+     * An advisor, created the only way one can be: by an administrator.
+     *
+     * @return array{admin: string, advisor: string}
+     */
+    protected function signInAsBothRoles(): array
+    {
+        $admin = $this->signInAsAdmin();
+
+        $this->postJson('/api/v1/users', [
+            'username' => self::ADVISOR_USERNAME,
+            'password' => self::ADVISOR_PASSWORD,
+            'role' => 'advisor',
+        ], $this->bearer($admin))->assertStatus(201);
+
+        return [
+            'admin' => $admin,
+            'advisor' => $this->tokenOf(self::ADVISOR_USERNAME, self::ADVISOR_PASSWORD),
+        ];
+    }
+
+    /**
+     * Moves a line's due date into the past.
+     *
+     * This is not writing a state the API cannot produce: it is the row the
+     * API would have written days ago, aged. The due date is computed from the
+     * instant of the rental and the server owns that clock, so the only other
+     * way to see an overdue line in a test is to wait four days.
+     */
+    protected function ageDueDateBy(string $rentalId, int $days): void
+    {
+        $this->app->make('db')->connection()
+            ->table(Tables::RENTAL_ITEM)
+            ->where('rental_id', $rentalId)
+            ->update(['due_at' => now()->subDays($days)]);
     }
 }
