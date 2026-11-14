@@ -44,16 +44,19 @@ It goes **through the API**, never into the database. A seeder that wrote rows
 directly would be free to write states the API cannot produce, and the data it
 left would prove nothing about the rules.
 
-```bash
-API_URL=http://localhost:8000/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… node seed.mjs
-```
-
 It also creates an **advisor**, because with only the administrator nothing on
-screen shows what a role changes. The username is `asesor` and the password is
-the development value in `seed.mjs`; override either with `ADVISOR_USERNAME`
-and `ADVISOR_PASSWORD`. Signed in as that user the menu loses its Asesores
-entry, and the server answers 403 to the admin-only routes whether or not the
-menu offered them.
+screen shows what a role changes. Both of its values come from the
+environment: `ADVISOR_USERNAME` (defaults to `asesor`, a name and not a
+secret) and `ADVISOR_PASSWORD`, which has no default. Without it the seeder
+stops and says so rather than inventing one, because a password written in
+this folder is a password everyone who can read the repository knows.
+
+Signed in as that user the menu loses its Asesores entry, and the server
+answers 403 to the admin-only routes whether or not the menu offered them.
+
+```bash
+API_URL=http://localhost:8000/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… ADVISOR_PASSWORD=… node seed.mjs
+```
 
 ## `load-search.mjs`
 

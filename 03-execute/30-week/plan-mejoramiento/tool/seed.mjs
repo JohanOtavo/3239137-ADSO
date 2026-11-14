@@ -23,7 +23,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 
 // The advisor the seeder creates, so both roles can be signed in to.
 const ADVISOR_USERNAME = process.env.ADVISOR_USERNAME ?? 'asesor';
-const ADVISOR_PASSWORD = process.env.ADVISOR_PASSWORD ?? 'asesor-local-2026';
+const ADVISOR_PASSWORD = process.env.ADVISOR_PASSWORD ?? '';
 
 /*
  * The five category names are the ones the migration inserts, and they have to
@@ -53,11 +53,15 @@ const { expectOk, signIn } = createApi({ apiUrl: API_URL });
  * what the role actually changes: the advisor has no Asesores entry in the
  * menu and the server refuses the admin-only routes for it.
  *
- * The password is a local development value and lives here on purpose: a
- * credential a script invents and prints is a credential nobody can find
- * again. Override it with ADVISOR_PASSWORD.
+ * Its password comes from the environment and from nowhere else (article IX).
+ * A default written in this file would be a credential in the repository, and
+ * one that every reader of the repository knows is not a credential.
  */
 async function createAdvisor() {
+  if (ADVISOR_PASSWORD === '') {
+    throw new Error('ADVISOR_PASSWORD is not set; the seeder will not invent one.');
+  }
+
   const user = await expectOk('POST', '/users', {
     username: ADVISOR_USERNAME,
     password: ADVISOR_PASSWORD,
