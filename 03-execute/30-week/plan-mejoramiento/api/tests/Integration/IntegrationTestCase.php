@@ -53,7 +53,7 @@ abstract class IntegrationTestCase extends FoundationTestCase
     {
         parent::setUp();
 
-        $this->run('migrate:fresh');
+        $this->runCommand('migrate:fresh');
     }
 
     /**
@@ -68,7 +68,7 @@ abstract class IntegrationTestCase extends FoundationTestCase
             'filmgear.admin_password' => self::ADMIN_PASSWORD,
         ]);
 
-        $this->run('filmgear:ensure-admin');
+        $this->runCommand('filmgear:ensure-admin');
 
         return $this->tokenOf(self::ADMIN_USERNAME, self::ADMIN_PASSWORD);
     }
@@ -80,7 +80,7 @@ abstract class IntegrationTestCase extends FoundationTestCase
      * Mockery, which this project does not install, so the helper fails before
      * the command runs.
      */
-    private function run(string $command): void
+    private function runCommand(string $command): void
     {
         $exitCode = $this->app->make(Kernel::class)->call($command);
 
