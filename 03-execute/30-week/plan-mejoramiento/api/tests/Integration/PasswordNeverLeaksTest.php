@@ -35,7 +35,10 @@ final class PasswordNeverLeaksTest extends IntegrationTestCase
             'logging.channels.single.level' => 'debug',
         ]);
 
-        Log::forgetDrivers();
+        // The manager caches the channel it already built, so it has to be
+        // dropped for the new path to take effect.
+        $this->app->forgetInstance('log');
+        Log::clearResolvedInstances();
 
         if (file_exists($this->logPath())) {
             unlink($this->logPath());
