@@ -53,7 +53,7 @@ abstract class IntegrationTestCase extends FoundationTestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate:fresh')->assertExitCode(0);
+        $this->run('migrate:fresh');
     }
 
     /**
@@ -68,9 +68,23 @@ abstract class IntegrationTestCase extends FoundationTestCase
             'filmgear.admin_password' => self::ADMIN_PASSWORD,
         ]);
 
-        $this->artisan('filmgear:ensure-admin')->assertExitCode(0);
+        $this->run('filmgear:ensure-admin');
 
         return $this->tokenOf(self::ADMIN_USERNAME, self::ADMIN_PASSWORD);
+    }
+
+    /**
+     * Runs a command through the console kernel.
+     *
+     * Not the artisan test helper: that one builds its expectations with
+     * Mockery, which this project does not install, so the helper fails before
+     * the command runs.
+     */
+    private function run(string $command): void
+    {
+        $exitCode = $this->app->make(Kernel::class)->call($command);
+
+        self::assertSame(0, $exitCode, sprintf('The command %s failed.', $command));
     }
 
     protected function tokenOf(string $username, string $password): string
