@@ -55,3 +55,27 @@ evidence.
 
 The real state of each task lives in the commit history and in the output of `composer test`, not in a table in
 this document that somebody has to keep up to date by hand.
+
+## What is left, and what each piece has to show
+
+The twenty-three tasks above were written before anything was built. These are
+what running the finished system turned up: three defects, five promises whose
+evidence does not exist yet, and one promise that cannot be kept as written.
+
+They are ordered by what costs the most if it is left undone.
+
+| # | Task | Why it matters | Evidence it has to leave |
+|---|---|---|---|
+| T-24 | Close `/reports/most-requested` to the advisor | AC-10.5 and the contract both say `admin`; the route says `admin,advisor` and the menu offers it. It is the one authorisation hole in the system | An advisor's token answers 403, asserted by a test, and the entry leaves the advisor's menu |
+| T-25 | Make the contract match the API | The document says `rows` where the API sends `items`, `days_late` where it sends `days_overdue`, and promises a `from`/`to` echo that is not there | The three names agree, and a test reads the documented shape |
+| T-26 | Cover the fourteen error codes | T-16 promises a contract test over every route and every code. Eight are asserted; `USERNAME_TAKEN`, `DOCUMENT_TAKEN`, `EQUIPMENT_HAS_OPEN_RENTALS`, `PRODUCER_HAS_OVERDUE`, `INVALID_DATE_RANGE` and `VALIDATION_ERROR` are not | One test per missing code, each asserting the status and the code |
+| T-27 | Test the photo use case | T-15 promises a 2 MB PNG accepted, 3 MB refused and `photo_key` null without one. Nothing tests any of it | Three assertions against the use case, with the type decided by content and not by extension |
+| T-28 | Prove NFR-3 instead of asserting it | "The password never travels and never appears in a log" is the kind of claim that is true until somebody adds a `Log::info($request->all())` | A test that signs in and fails if the password appears in the response or in the log channel |
+| T-29 | Write `RentalItemTest` | It is on the promised file list and does not exist. The line is where the freezing and the single return live | The line freezes its three values and refuses a second return |
+| T-30 | Reconcile the integration file names | The list promises `ApiContractTest`, `ConcurrencyTest`, `EquipmentRepositoryTest`, `RentalRepositoryTest` and `CatalogSearchPerformanceTest`. What exists covers all of it under four other names, and the performance one lives in `tool` | Either the files carry the promised names or this document says what replaced them and why |
+| T-31 | Decide what to do about the three overdue lines | T-21 promises them and the seeder cannot produce them: the due date is computed from the rental and the server owns the clock. Leaving it unexplained reads as a task quietly dropped | Either a documented way to run the stack with its clock moved, or this document's evidence for T-21 corrected to what the API can actually reach |
+| T-32 | Walk the seven screens signed in, as both roles | The one piece of T-22 that no script should claim. The operator has the credentials; nobody else does | A note of what was walked, with both roles, and anything that did not behave |
+
+T-24 through T-29 are code and tests. T-30 and T-31 are decisions about this
+document, and both are worth more than the hour they cost: an evaluator reads
+the promise before the code.
