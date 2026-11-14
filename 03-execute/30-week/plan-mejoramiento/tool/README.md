@@ -48,6 +48,13 @@ left would prove nothing about the rules.
 API_URL=http://localhost:8000/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… node seed.mjs
 ```
 
+It also creates an **advisor**, because with only the administrator nothing on
+screen shows what a role changes. The username is `asesor` and the password is
+the development value in `seed.mjs`; override either with `ADVISOR_USERNAME`
+and `ADVISOR_PASSWORD`. Signed in as that user the menu loses its Asesores
+entry, and the server answers 403 to the admin-only routes whether or not the
+menu offered them.
+
 ## `load-search.mjs`
 
 Measures the equipment search against NFR-1: under 300 ms with 5,000 pieces of
