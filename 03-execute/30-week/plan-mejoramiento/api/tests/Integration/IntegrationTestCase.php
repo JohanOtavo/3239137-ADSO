@@ -53,7 +53,25 @@ abstract class IntegrationTestCase extends FoundationTestCase
     {
         parent::setUp();
 
-        $this->runCommand('migrate:fresh');
+        $this->emptyTheEngine();
+        $this->runCommand('migrate');
+    }
+
+    /**
+     * Drops the project schema instead of asking migrate:fresh to wipe it.
+     *
+     * The wipe lists the tables of the search path, and the session that opened
+     * before the schema existed does not always see them, which showed up as an
+     * intermittent "relation category already exists". Dropping the schema is
+     * one statement and leaves the engine in the state ADR-001 assumes: empty,
+     * with the migration owning every table.
+     */
+    private function emptyTheEngine(): void
+    {
+        $connection = $this->app->make('db')->connection();
+
+        $connection->statement('drop schema if exists filmgear cascade');
+        $connection->statement('drop table if exists public.migrations');
     }
 
     /**
