@@ -19,12 +19,17 @@ const API_URL = process.env.API_URL ?? 'http://localhost:8000/api/v1';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 
+/*
+ * The five category names are the ones the migration inserts, and they have to
+ * match exactly: the seeder looks each one up by name and refuses to guess. It
+ * asked for two categories that do not exist, so it died on the first lookup.
+ */
 const CATEGORY_PLAN = [
   { name: 'Cámaras', models: ['FX3', 'FX6', 'C70', 'R5C', 'A7S3'], brand: 'Sony' },
   { name: 'Lentes', models: ['24-70', '70-200', '35-ART', '50-SUM', '85-GM'], brand: 'Canon' },
-  { name: 'Iluminación', models: ['300D', '600D', 'TUBE-X', 'PANEL-1', 'DOME-2'], brand: 'Aputure' },
-  { name: 'Sonido', models: ['MKH-416', 'NTG5', 'WL-DUO', 'MIX-6', 'REC-F3'], brand: 'Rode' },
   { name: 'Drones', models: ['MAV-3', 'AIR-3', 'INS-2', 'FPV-1', 'MINI-4'], brand: 'DJI' },
+  { name: 'Audio', models: ['NTG5', 'WL-DUO', 'MIX-6', 'REC-F3', 'VMIC-P'], brand: 'Rode' },
+  { name: 'Estabilizadores', models: ['RS-3', 'RS-4', 'CRANE-4', 'WEEBILL-3', 'SMOOTH-5'], brand: 'Zhiyun' },
 ];
 
 const PRODUCER_NAMES = [
@@ -91,7 +96,7 @@ async function categoriesByName() {
   return found;
 }
 
-/** Forty pieces of equipment: eight per category, so every filter has rows. */
+/** Fifty pieces of equipment: ten per category, so every filter has rows. */
 async function createEquipment(categories) {
   const created = [];
 
