@@ -44,7 +44,9 @@ A frontend that refused to start because the API was slow would also be worse at
 saying what is wrong than one that loads and reports the failure.
 
 The API boots in this order: wait for the engine to accept connections, run the
-migrations, then serve.
+migrations, create the administrator from `ADMIN_USERNAME` and `ADMIN_PASSWORD`,
+then serve. The administrator step is idempotent, so a restart leaves one
+administrator and changes no password.
 
 ## Proving the database arrives empty
 
@@ -75,8 +77,13 @@ No column may come back with a `column_default`.
 ## Backend tests inside the container
 
 ```bash
-docker compose exec api vendor/bin/phpunit
+docker compose exec api vendor/bin/phpunit --testsuite=domain,application,adapters,architecture
 ```
+
+**Not the integration suite in here.** It rebuilds the schema before every
+test, and inside this container `DB_*` points at the running engine, so it
+would drop the data the stack is serving. That suite belongs on a throwaway
+database, which is what CI gives it.
 
 ## Shut down
 
