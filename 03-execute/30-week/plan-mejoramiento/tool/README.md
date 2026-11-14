@@ -97,3 +97,29 @@ node --test
 23 tests over the parts where a mistake is silent: the guard in both directions,
 the percentile, the generated model codes, and the client's token, statuses and
 query string.
+
+### The measured run
+
+5,000 pieces of equipment, 60 samples per path, against the compose stack:
+
+| Path | p50 | p95 | worst |
+|---|---|---|---|
+| first page, no filter | 24.2 ms | 26.4 ms | 36.1 ms |
+| name match | 29.0 ms | 31.3 ms | 33.3 ms |
+| brand match | 29.0 ms | 31.6 ms | 32.5 ms |
+| one category | 23.9 ms | 26.9 ms | 27.6 ms |
+| category and term | 25.1 ms | 27.3 ms | 27.8 ms |
+| deep page | 30.0 ms | 40.2 ms | 50.3 ms |
+
+NFR-1 met: the slowest path is 40.2 ms at p95 against a 300 ms budget.
+
+Two things that margin does **not** prove, and it is better to say so than to
+be asked:
+
+- The API is served by `php artisan serve`, which handles one request at a
+  time. These are the numbers one user waits for, not the throughput of
+  several at once.
+- A term search is `ILIKE '%term%'`, which no btree index can serve, so it is
+  a sequential scan. Over 5,000 rows that is cheap and the figures show it.
+  Over half a million it would not be, and the fix then is a trigram index,
+  not a faster loop.
