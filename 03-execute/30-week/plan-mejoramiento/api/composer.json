@@ -25,7 +25,7 @@
             "@php artisan package:discover --ansi"
         ],
         "test": [
-            "@php vendor/bin/phpunit"
+            "@php vendor/bin/phpunit --testsuite=domain,application,adapters,architecture"
         ]
     },
     "config": {

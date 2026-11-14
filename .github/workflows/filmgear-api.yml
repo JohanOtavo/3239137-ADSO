@@ -32,3 +32,56 @@ jobs:
       # themselves. Integration stays out because it needs a live PostgreSQL.
       - name: Domain, application, adapters and architecture
         run: vendor/bin/phpunit --testsuite=domain,application,adapters,architecture
+
+  integration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03-execute/30-week/plan-mejoramiento/api
+
+    # The engine arrives empty, exactly as ADR-001 says: the migration owns
+    # every table, so nothing here loads a dump.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: filmgear
+          POSTGRES_USER: filmgear
+          POSTGRES_PASSWORD: filmgear-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U filmgear -d filmgear"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: filmgear
+      DB_USERNAME: filmgear
+      # A password for this runner alone. The real one is never in the repo.
+      DB_PASSWORD: filmgear-ci-password
+      DB_SCHEMA: filmgear
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      PHOTOS_DIR: storage/app/photos
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_pgsql, mbstring
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # The suite boots the application and rebuilds the schema per test, so
+      # the signing secret comes from the test base and not from here.
+      - name: Integration and concurrency
+        run: vendor/bin/phpunit --testsuite=integration

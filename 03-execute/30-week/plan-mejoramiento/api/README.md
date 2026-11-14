@@ -33,13 +33,18 @@ composer test                              # domain, application, adapters, arch
 vendor/bin/phpunit --testsuite=integration # needs a live PostgreSQL
 ```
 
+The integration suite rebuilds the schema before every test, so point `DB_*`
+at a throwaway database and never at one holding data. It signs its own tokens
+and provisions its own administrator, so no `JWT_SECRET` or `ADMIN_*` is read
+from the environment for it.
+
 | Suite | What it checks | Against what |
 |---|---|---|
 | `domain` | Invariants: model code, units in range, four day term, two item limit | Nothing: plain objects |
 | `application` | Use cases: rent, return, report | Test doubles |
 | `adapters` | Token issuing and multipart parsing | Plain objects |
 | `architecture` | Articles I, II and III | The source files |
-| `integration` | Repositories, contract, concurrency, search under load | A real PostgreSQL |
+| `integration` | HTTP contract, derived state, frozen values, two session races | A real PostgreSQL |
 
 ## Language
 
