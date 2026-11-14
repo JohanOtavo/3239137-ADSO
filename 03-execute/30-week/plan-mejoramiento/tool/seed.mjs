@@ -15,6 +15,8 @@
 
 import process from 'node:process';
 
+import { createApi } from './api.mjs';
+
 const API_URL = process.env.API_URL ?? 'http://localhost:8000/api/v1';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
@@ -38,52 +40,7 @@ const PRODUCER_NAMES = [
   'Paula Cardona', 'Tomás Granados',
 ];
 
-let accessToken = null;
-
-async function call(method, path, body, { raw = false } = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    method,
-    headers: {
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(accessToken === null ? {} : { Authorization: `Bearer ${accessToken}` }),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-
-  if (response.status === 204 || raw) {
-    return { status: response.status, body: null };
-  }
-
-  const payload = await response.json().catch(() => null);
-
-  return { status: response.status, body: payload };
-}
-
-/** Fails loudly: a seeder that swallows a rejection leaves a half-filled instance. */
-async function expectOk(method, path, body, expected) {
-  const result = await call(method, path, body);
-
-  if (!expected.includes(result.status)) {
-    const detail = result.body === null ? '' : ` ${JSON.stringify(result.body)}`;
-
-    throw new Error(`${method} ${path} answered ${result.status}.${detail}`);
-  }
-
-  return result.body;
-}
-
-async function signIn() {
-  if (ADMIN_PASSWORD === '') {
-    throw new Error('ADMIN_PASSWORD is not set; the seeder has no way to sign in.');
-  }
-
-  const body = await expectOk('POST', '/auth/login', {
-    username: ADMIN_USERNAME,
-    password: ADMIN_PASSWORD,
-  }, [200]);
-
-  accessToken = body.access_token;
-}
+const { expectOk, signIn } = createApi({ apiUrl: API_URL });
 
 async function categoriesByName() {
   const body = await expectOk('GET', '/categories', undefined, [200]);
@@ -211,7 +168,7 @@ async function report() {
 async function main() {
   console.log(`Seeding ${API_URL}`);
 
-  await signIn();
+  await signIn(ADMIN_USERNAME, ADMIN_PASSWORD);
 
   const categories = await categoriesByName();
   const equipment = await createEquipment(categories);
