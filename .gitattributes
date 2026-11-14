@@ -1,0 +1,13 @@
+# Files that end up inside a container must keep LF endings.
+#
+# On a Windows checkout git hands out CRLF, and a shell that reads "set -e\r"
+# answers "Illegal option -": the API container exited before it ever reached a
+# migration. The container runs Linux whatever the developer's machine runs, so
+# these endings are not a preference.
+*.sh text eol=lf
+*.conf text eol=lf
+Dockerfile text eol=lf
+entrypoint.sh text eol=lf
+
+# Keep the PDF out of the line-ending machinery entirely.
+*.pdf binary
