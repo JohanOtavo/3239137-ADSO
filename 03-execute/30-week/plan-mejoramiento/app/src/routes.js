@@ -11,7 +11,7 @@ export const ROUTES = [
   { id: 'rent', label: 'Registrar alquiler', roles: ['admin', 'advisor'] },
   { id: 'rentals', label: 'Alquileres', roles: ['admin', 'advisor'] },
   { id: 'overdue', label: 'Vencidos', roles: ['admin', 'advisor'] },
-  { id: 'report', label: 'Más solicitados', roles: ['admin', 'advisor'] },
+  { id: 'report', label: 'Más solicitados', roles: ['admin'] },
   { id: 'users', label: 'Asesores', roles: ['admin'] },
 ];
 

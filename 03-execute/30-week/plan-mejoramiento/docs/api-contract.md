@@ -172,7 +172,7 @@ validated by **content**, not by extension, and accept only `image/jpeg` and `im
 `POST /rentals/{rental_id}/items/{item_id}/return` returns 200 with the line, `returned_at` filled in.
 
 `GET /rentals/overdue` returns `items`:
-`{ "rental_id", "item_id", "equipment_name", "producer_name", "due_at", "days_late" }`.
+`{ "rental_id", "item_id", "equipment_name", "producer_name", "due_at", "days_overdue" }`.
 The producer name does appear here, because this is an operational list; **the report in 3.7 does not show it**.
 
 ### 3.7 Report
@@ -183,12 +183,14 @@ The producer name does appear here, because this is an operational list; **the r
 
 ```json
 {
-  "from": "2026-11-01", "to": "2026-11-30",
-  "rows": [
+  "items": [
     { "equipment_id": "…", "equipment_name": "Sony FX3", "category_name": "Cámaras", "times_rented": 12 }
   ]
 }
 ```
+
+The envelope is `items`, the word every list in this contract uses. The range
+is not echoed back: the client sent it and already has it.
 
 One row per frozen `equipment_id + equipment_name + category_name`. Order: `times_rented` descending, then name.
 No producers, no advisors.

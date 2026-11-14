@@ -79,3 +79,7 @@ They are ordered by what costs the most if it is left undone.
 T-24 through T-29 are code and tests. T-30 and T-31 are decisions about this
 document, and both are worth more than the hour they cost: an evaluator reads
 the promise before the code.
+
+T-24 to T-28 are done and their evidence runs in CI. What is left is T-30 and
+T-31, which are decisions about this document rather than code, and T-32,
+which belongs to whoever has the credentials.
