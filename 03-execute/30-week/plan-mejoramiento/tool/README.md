@@ -1,6 +1,6 @@
 # tool
 
-Two scripts, both plain Node with no dependencies.
+Three scripts and one shared client, all plain Node with no dependencies.
 
 ## `check-language.mjs`
 
@@ -47,3 +47,53 @@ left would prove nothing about the rules.
 ```bash
 API_URL=http://localhost:8000/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… node seed.mjs
 ```
+
+## `load-search.mjs`
+
+Measures the equipment search against NFR-1: under 300 ms with 5,000 pieces of
+equipment.
+
+It fills the catalogue to 5,000 through the API, then times six access paths
+from outside the server, so the number is what a browser waits for: routing,
+middleware, token check, the query and the serialisation. A query timed inside
+PostgreSQL would answer a different question, and it is not the question the
+requirement asks.
+
+```bash
+API_URL=http://localhost:8000/api/v1 ADMIN_USERNAME=admin ADMIN_PASSWORD=… node load-search.mjs
+```
+
+It reports the **95th percentile** per path, not the mean. A mean hides exactly
+the requests that matter: nobody notices the fast half. The percentile is a
+nearest-rank value with no interpolation, so every figure printed is a time
+some request really took.
+
+The deep page is in the list on purpose. An offset still walks the rows it
+skips, so page 40 is the dearest path the catalogue has, and a report that
+measured only the first page would name a budget nobody is ever inside.
+
+Exit code `0` only when the catalogue reached 5,000 pieces **and** every path
+is inside the budget. A run that filled less says so and still fails: half a
+catalogue cannot answer the requirement.
+
+Knobs, all optional: `BUDGET_MS`, `TARGET_EQUIPMENT`, `SAMPLES`,
+`FILL_CONCURRENCY`.
+
+## `api.mjs`
+
+The HTTP client the seeder and the load test share. It keeps the token private
+and throws an `ApiError` carrying the status and the body, so a caller can tell
+a refused rule from a broken script.
+
+It exists because both scripts needed the same fetch wrapper, and a second copy
+is a second place for the `Authorization` header to be forgotten.
+
+## Tests
+
+```bash
+node --test
+```
+
+23 tests over the parts where a mistake is silent: the guard in both directions,
+the percentile, the generated model codes, and the client's token, statuses and
+query string.
