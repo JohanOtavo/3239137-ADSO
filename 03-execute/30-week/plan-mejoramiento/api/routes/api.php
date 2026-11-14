@@ -56,7 +56,5 @@ Route::middleware('token')->group(function (): void {
         Route::get('rentals', [RentalController::class, 'index']);
         Route::get('rentals/{id}', [RentalController::class, 'show']);
         Route::post('rentals/{rentalId}/items/{itemId}/return', [RentalController::class, 'returnItem']);
-
-        Route::get('reports/most-requested', [ReportController::class, 'mostRequested']);
     });
 });
