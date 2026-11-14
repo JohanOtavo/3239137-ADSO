@@ -21,6 +21,10 @@ const API_URL = process.env.API_URL ?? 'http://localhost:8000/api/v1';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 
+// The advisor the seeder creates, so both roles can be signed in to.
+const ADVISOR_USERNAME = process.env.ADVISOR_USERNAME ?? 'asesor';
+const ADVISOR_PASSWORD = process.env.ADVISOR_PASSWORD ?? 'asesor-local-2026';
+
 /*
  * The five category names are the ones the migration inserts, and they have to
  * match exactly: the seeder looks each one up by name and refuses to guess. It
@@ -41,6 +45,27 @@ const PRODUCER_NAMES = [
 ];
 
 const { expectOk, signIn } = createApi({ apiUrl: API_URL });
+
+/**
+ * An advisor, so the two roles can be seen apart.
+ *
+ * Without one there is only the administrator, and nothing on screen shows
+ * what the role actually changes: the advisor has no Asesores entry in the
+ * menu and the server refuses the admin-only routes for it.
+ *
+ * The password is a local development value and lives here on purpose: a
+ * credential a script invents and prints is a credential nobody can find
+ * again. Override it with ADVISOR_PASSWORD.
+ */
+async function createAdvisor() {
+  const user = await expectOk('POST', '/users', {
+    username: ADVISOR_USERNAME,
+    password: ADVISOR_PASSWORD,
+    role: 'advisor',
+  }, [201, 409]);
+
+  return user === null || user.id === undefined ? null : user;
+}
 
 async function categoriesByName() {
   const body = await expectOk('GET', '/categories', undefined, [200]);
@@ -170,9 +195,12 @@ async function main() {
 
   await signIn(ADMIN_USERNAME, ADMIN_PASSWORD);
 
+  const advisor = await createAdvisor();
   const categories = await categoriesByName();
   const equipment = await createEquipment(categories);
   const producers = await createProducers();
+
+  console.log(`  advisor:   ${ADVISOR_USERNAME}${advisor === null ? ' (already there)' : ''}`);
 
   if (equipment.length === 0 || producers.length === 0) {
     console.log('The catalogue and the producers were already there; nothing new was created.');
