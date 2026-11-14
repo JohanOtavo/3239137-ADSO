@@ -38,6 +38,10 @@ Route::middleware('token')->group(function (): void {
         Route::delete('equipment/{id}', [EquipmentController::class, 'destroy']);
         Route::put('equipment/{id}/photo', [EquipmentPhotoController::class, 'update']);
         Route::delete('equipment/{id}/photo', [EquipmentPhotoController::class, 'destroy']);
+
+        // Admin only (AC-10.5). It is the one report in the system and it shows
+        // what the house moves; an advisor records rentals and does not need it.
+        Route::get('reports/most-requested', [ReportController::class, 'mostRequested']);
     });
 
     Route::middleware('role:admin,advisor')->group(function (): void {
