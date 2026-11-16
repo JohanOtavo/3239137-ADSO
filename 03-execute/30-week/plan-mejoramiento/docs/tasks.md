@@ -97,5 +97,12 @@ the way: the contract test ages a line through the database, which is the row
 the API would have written days ago, so an overdue line is reachable in a test
 without waiting four days.
 
-What is left is T-32, the walk through the seven screens signed in as both
-roles, which belongs to whoever holds the credentials.
+T-32 was walked on 2026-11-15 by the operator, signed in as both roles, with
+nothing reported as misbehaving. It is recorded in
+[`verification.md`](verification.md) section 7 and marked there as a person's
+report rather than a command's output, because that is what it is.
+
+Every task on both lists now has evidence. What the project does not have is
+a claim that it has more than that: the overdue screen still cannot be shown
+with data in it without moving a clock the server owns, and `verification.md`
+says so where somebody looking for it will find it.
