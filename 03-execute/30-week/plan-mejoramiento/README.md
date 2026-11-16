@@ -61,6 +61,7 @@ The specification documents, and which ones exist:
 | `docs/architecture.md` | Written |
 | `docs/tasks.md` | Written |
 | `docs/adr/` (four) | Written |
+| `docs/verification.md` | Written, and executed on 2026-11-15 |
 
 Nothing in this folder declares finished what is not: that is article XII, and it is why this table exists.
 
