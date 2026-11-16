@@ -139,14 +139,61 @@ Seven screens behind nginx, talking to the API from the browser and not from
 inside the compose network. The signed-in walk is the operator's own and is
 the one piece of T-22 no script should claim.
 
+## 7. The signed-in walk (T-32)
+
+Walked by the operator on 2026-11-15 against this stack, signed in as both
+`admin` and `asesor`. Reported: nothing misbehaved.
+
+This section is a person's report and is marked as one. Everything above was
+produced by a command whose output is quoted; this was not, and writing it as
+though a tool had checked it would be the claim article XII exists to stop.
+
+What a tool did check, separately, is the half a walk cannot show: the server
+refuses what the menu hides. Section 5 has those four results. The advisor's
+missing menu entries are a convenience; if the menu were the control, typing
+the URL would be enough to get past it.
+
+## 8. The search under 5,000 pieces of equipment (NFR-1)
+
+```bash
+API_URL=http://localhost:8000/api/v1 node load-search.mjs
+```
+
+The catalogue was filled from 50 to 5,000 through the API, and then six access
+paths were timed from outside the server, 60 samples each.
+
+| Path | p50 | p95 | worst |
+|---|---|---|---|
+| first page, no filter | 28.0 ms | 43.9 ms | 51.2 ms |
+| name match | 33.5 ms | 41.2 ms | 50.1 ms |
+| brand match | 36.5 ms | 46.2 ms | 49.1 ms |
+| one category | 28.2 ms | 32.2 ms | 36.9 ms |
+| category and term | 29.6 ms | 45.2 ms | 53.8 ms |
+| deep page | 31.9 ms | 39.5 ms | 43.6 ms |
+
+The slowest path is 46.2 ms at the 95th percentile, against a 300 ms budget.
+
+The run on 2026-11-13 put the slowest at 40.2 ms. The six millisecond
+difference is the machine, not the code: this run happened with the whole
+stack and a browser open, and nothing in the query path changed between them.
+Both are far enough inside the budget that the gap does not matter, and
+quoting only the better of the two would be picking a number.
+
+What the margin does not prove is in `tool/README.md`, and it is worth saying
+out loud before somebody asks: `php artisan serve` handles one request at a
+time, so these are the milliseconds one user waits and not the throughput of
+several; and a term search is `ILIKE '%term%'`, a sequential scan that is
+cheap over 5,000 rows and would not be over half a million.
+
 ## What this run does not cover
 
-- **The load test.** NFR-1 was measured on 2026-11-13 over 5,000 pieces of
-  equipment and the figures are in `tool/README.md`. It was not re-run here
-  because it would leave the instance holding 5,000 rows, and the next thing
-  this stack is for is a walk through the screens.
-- **The overdue screen with data in it.** See section 4.
-- **The signed-in screens.** They need the operator's credentials.
+- **The overdue screen with data in it.** See section 4: the clock belongs to
+  the server, and the seeder says so rather than writing a date the API would
+  never produce.
+- **Browsers other than the one the operator used.** The stylesheets lean on
+  `backdrop-filter`, and where it is missing the surfaces fall back to a solid
+  tint, which keeps every contrast ratio the same. That fallback has been
+  written, not seen.
 
 ## Repeating it
 
@@ -158,4 +205,9 @@ cd infra && docker compose down -v && docker compose up -d --build
 docker compose exec db psql -U filmgear -d filmgear -c "\dt filmgear.*"
 curl http://localhost:8000/api/v1/health
 cd ../tool && API_URL=http://localhost:8000/api/v1 node seed.mjs
+node load-search.mjs
 ```
+
+The last one takes a few minutes and leaves the catalogue holding 5,000
+pieces. Running the first two again puts it back to 50, which is the size the
+screens are nicer to look at.

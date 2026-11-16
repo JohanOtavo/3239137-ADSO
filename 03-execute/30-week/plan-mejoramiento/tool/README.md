@@ -125,6 +125,10 @@ Knobs, all optional: `BUDGET_MS`, `TARGET_EQUIPMENT`, `SAMPLES`,
 
 NFR-1 met: the slowest path is 40.2 ms at p95 against a 300 ms budget.
 
+It was run again from a wiped volume on 2026-11-15 and the slowest path came
+out at 46.2 ms. Both runs and the reason they differ are in
+[docs/verification.md](../docs/verification.md) section 8.
+
 Two things that margin does **not** prove, and it is better to say so than to
 be asked:
 
