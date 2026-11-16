@@ -1,6 +1,6 @@
 # tool
 
-Three scripts and one shared client, all plain Node with no dependencies.
+Four scripts and one shared client, all plain Node with no dependencies.
 
 ## `check-language.mjs`
 
@@ -22,6 +22,27 @@ messages a person reads, and the contract requires them in Spanish
 green.
 
 Exit code `0` when clean, `1` with a list of `file:line` otherwise.
+
+## `check-contrast.mjs`
+
+Measures the colour pairs both stylesheets actually render, against WCAG 2.2
+AA for normal text (4.5:1).
+
+```bash
+node check-contrast.mjs
+```
+
+The palette of both surfaces changed in one afternoon and was judged by eye.
+Eyes are bad at this: a pair at 3.9:1 looks fine on the laptop it was designed
+on and vanishes on a projector, which is where this project gets shown.
+
+It reads the values **out of the stylesheets** instead of keeping a copy, so a
+colour that moves is measured where it moved to, and a token that is renamed
+or deleted fails the run rather than being skipped. Translucent layers are
+flattened over what is behind them, which is the only honest way to measure
+text sitting on glass.
+
+Eighteen pairs, all passing: the lowest is 5.12:1, the labels outside a panel.
 
 ## `seed.mjs`
 
@@ -89,25 +110,6 @@ catalogue cannot answer the requirement.
 Knobs, all optional: `BUDGET_MS`, `TARGET_EQUIPMENT`, `SAMPLES`,
 `FILL_CONCURRENCY`.
 
-## `api.mjs`
-
-The HTTP client the seeder and the load test share. It keeps the token private
-and throws an `ApiError` carrying the status and the body, so a caller can tell
-a refused rule from a broken script.
-
-It exists because both scripts needed the same fetch wrapper, and a second copy
-is a second place for the `Authorization` header to be forgotten.
-
-## Tests
-
-```bash
-node --test
-```
-
-23 tests over the parts where a mistake is silent: the guard in both directions,
-the percentile, the generated model codes, and the client's token, statuses and
-query string.
-
 ### The measured run
 
 5,000 pieces of equipment, 60 samples per path, against the compose stack:
@@ -133,3 +135,24 @@ be asked:
   a sequential scan. Over 5,000 rows that is cheap and the figures show it.
   Over half a million it would not be, and the fix then is a trigram index,
   not a faster loop.
+
+## `api.mjs`
+
+The HTTP client the seeder and the load test share. It keeps the token private
+and throws an `ApiError` carrying the status and the body, so a caller can tell
+a refused rule from a broken script.
+
+It exists because both scripts needed the same fetch wrapper, and a second copy
+is a second place for the `Authorization` header to be forgotten.
+
+## Tests
+
+```bash
+node --test
+```
+
+38 tests over the parts where a mistake is silent: the language guard in both
+directions, the contrast maths against the ratios WCAG publishes, the
+percentile, the generated model codes, and the client's token, statuses and
+query string.
+
