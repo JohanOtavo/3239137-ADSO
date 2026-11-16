@@ -44,7 +44,7 @@ The plan asks for **15 or more**. This list is what is promised:
 | `tests/Architecture/` | `LayerDependenciesTest` |
 | `tests/Integration/` | `EquipmentRepositoryTest`, `RentalRepositoryTest`, `ApiContractTest`, `ConcurrencyTest`, `CatalogSearchPerformanceTest` |
 
-Twenty-three files were promised and twenty-nine exist. Four of the promised
+Twenty-three files were promised and thirty exist. Four of the promised
 names are not among them, and this is what replaced each one and why (T-30).
 
 | Promised | Shipped as | Why |
