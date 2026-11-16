@@ -139,14 +139,29 @@ Seven screens behind nginx, talking to the API from the browser and not from
 inside the compose network. The signed-in walk is the operator's own and is
 the one piece of T-22 no script should claim.
 
+## 7. The signed-in walk (T-32)
+
+Walked by the operator on 2026-11-15 against this stack, signed in as both
+`admin` and `asesor`. Reported: nothing misbehaved.
+
+This section is a person's report and is marked as one. Everything above was
+produced by a command whose output is quoted; this was not, and writing it as
+though a tool had checked it would be the claim article XII exists to stop.
+
+What a tool did check, separately, is the half a walk cannot show: the server
+refuses what the menu hides. Section 5 has those four results. The advisor's
+missing menu entries are a convenience; if the menu were the control, typing
+the URL would be enough to get past it.
+
 ## What this run does not cover
 
-- **The load test.** NFR-1 was measured on 2026-11-13 over 5,000 pieces of
-  equipment and the figures are in `tool/README.md`. It was not re-run here
-  because it would leave the instance holding 5,000 rows, and the next thing
-  this stack is for is a walk through the screens.
-- **The overdue screen with data in it.** See section 4.
-- **The signed-in screens.** They need the operator's credentials.
+- **The overdue screen with data in it.** See section 4: the clock belongs to
+  the server, and the seeder says so rather than writing a date the API would
+  never produce.
+- **Browsers other than the one the operator used.** The stylesheets lean on
+  `backdrop-filter`, and where it is missing the surfaces fall back to a solid
+  tint, which keeps every contrast ratio the same. That fallback has been
+  written, not seen.
 
 ## Repeating it
 
